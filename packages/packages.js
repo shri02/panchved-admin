@@ -813,7 +813,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 8. Add Package Form Submit
+
+  // 8. Add Package Form Submit - Azure Blob Image Upload
   if (addPackageForm) {
     addPackageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -835,105 +836,152 @@ document.addEventListener('DOMContentLoaded', () => {
       const patientMonitoring = document.getElementById('addPatientMonitoring')?.value.trim() || '';
       const followupReview = document.getElementById('addFollowupReview')?.value.trim() || '';
 
-      // Mandatory validation checks for all sections
+      // Image input
+      const imageInput = document.getElementById('addPkgImageInput');
+      const imageFile = imageInput?.files?.[0];
+
+      // Mandatory field validations
       if (!pkgName) {
         showToast('Please enter package name.', 'error');
         document.getElementById('addPkgName')?.focus();
         return;
       }
+
       if (/[0-9]/.test(pkgName)) {
         showToast('Package name should not contain numbers.', 'error');
         document.getElementById('addPkgName')?.focus();
         return;
       }
+
       if (!category) {
         showToast('Please enter package category.', 'error');
         document.getElementById('addPkgCategory')?.focus();
         return;
       }
+
       if (/[0-9]/.test(category)) {
         showToast('Package category should not contain numbers.', 'error');
         document.getElementById('addPkgCategory')?.focus();
         return;
       }
+
       if (!assignDoctor1) {
         showToast('Please select assigned doctor 1.', 'error');
         document.getElementById('addPkgDoctor1')?.focus();
         return;
       }
+
       if (!price) {
         showToast('Please enter package price.', 'error');
         document.getElementById('addPkgPrice')?.focus();
         return;
       }
-      if (/[^0-9]/.test(price)) {
-        showToast('Package price must contain only numbers.', 'error');
+
+      if (!/^\d+(\.\d{1,2})?$/.test(price)) {
+        showToast('Please enter a valid package price.', 'error');
         document.getElementById('addPkgPrice')?.focus();
         return;
       }
+
       if (!duration) {
         showToast('Please select package duration.', 'error');
         document.getElementById('addPkgDuration')?.focus();
         return;
       }
+
       if (!shortDesc) {
         showToast('Please enter short description.', 'error');
         document.getElementById('addPkgShortDesc')?.focus();
         return;
       }
+
       if (!overview) {
         showToast('Please enter package overview.', 'error');
         document.getElementById('addPkgOverview')?.focus();
         return;
       }
+
       if (!benefits) {
         showToast('Please enter key benefits.', 'error');
         document.getElementById('addPkgBenefits')?.focus();
         return;
       }
+
       if (!included) {
         showToast("Please enter what's included.", 'error');
         document.getElementById('addPkgIncluded')?.focus();
         return;
       }
+
       if (!diet) {
         showToast('Please enter diet & hydration details.', 'error');
         document.getElementById('addDietHydration')?.focus();
         return;
       }
+
       if (!yoga) {
         showToast('Please enter yoga / physiotherapy details.', 'error');
         document.getElementById('addYogaPhysio')?.focus();
         return;
       }
+
       if (!ayurveda) {
         showToast('Please enter ayurveda dincharya details.', 'error');
         document.getElementById('addAyurvedaDinacharya')?.focus();
         return;
       }
+
       if (!dailyActivity) {
         showToast('Please enter daily activity details.', 'error');
         document.getElementById('addDailyActivity')?.focus();
         return;
       }
+
       if (!patientMonitoring) {
         showToast('Please enter patient monitoring details.', 'error');
         document.getElementById('addPatientMonitoring')?.focus();
         return;
       }
+
       if (!followupReview) {
         showToast('Please enter follow-up & progress review details.', 'error');
         document.getElementById('addFollowupReview')?.focus();
         return;
       }
 
-      const submitBtn = addPackageForm.querySelector('button[type="submit"]');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Saving...</span>';
+      // Image validation
+      if (!imageFile) {
+        showToast('Please select a package image.', 'error');
+        imageInput?.focus();
+        return;
       }
 
-      const combinedDoctor = assignDoctor2 ? `${assignDoctor1}, ${assignDoctor2}` : assignDoctor1;
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+      if (!allowedTypes.includes(imageFile.type)) {
+        showToast('Only JPG, PNG and WebP images are allowed.', 'error');
+        imageInput?.focus();
+        return;
+      }
+
+      const maxImageSize = 5 * 1024 * 1024; // 5 MB
+
+      if (imageFile.size > maxImageSize) {
+        showToast('Image size must not exceed 5 MB.', 'error');
+        imageInput?.focus();
+        return;
+      }
+
+      const submitBtn = addPackageForm.querySelector('button[type="submit"]');
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Uploading image & saving...</span>';
+      }
+
+      const combinedDoctor = assignDoctor2
+        ? `${assignDoctor1}, ${assignDoctor2}`
+        : assignDoctor1;
 
       const payload = {
         package_name: pkgName,
@@ -961,23 +1009,46 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       try {
+        // Send package fields and image as multipart/form-data
+        const formData = new FormData();
+
+        Object.entries(payload).forEach(([key, value]) => {
+          formData.append(key, value == null ? '' : String(value));
+        });
+
+        // PHP receives this file in $_FILES['package_image']
+        formData.append('package_image', imageFile);
+
         const response = await fetch(`${API_BASE}/add_package.php`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
+          headers: {
+            'Accept': 'application/json'
+          },
+          body: formData
         });
+
         const res = await response.json().catch(() => ({}));
-        if (res.status === '1') {
-          showToast('Package created successfully!');
-          addPackageForm.reset();
-          switchView(packagesListView);
-          await fetchPackages(1);
-        } else {
-          showToast(res.message || 'Failed to add package.', 'error');
+
+        if (!response.ok || res.status !== '1') {
+          throw new Error(res.message || 'Failed to add package.');
         }
+
+        showToast('Package created successfully!');
+
+        addPackageForm.reset();
+
+        const selectedFileName = document.getElementById('addSelectedFileName');
+        if (selectedFileName) {
+          selectedFileName.textContent = '';
+        }
+
+        switchView(packagesListView);
+        await fetchPackages(1);
+
       } catch (err) {
-        console.error(err);
+        console.error('Add package error:', err);
         showToast(err.message || 'Failed to add package.', 'error');
+
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -986,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
 
   // 9. Edit Package View Open & Submit
   document.addEventListener('click', async (e) => {
