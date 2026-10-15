@@ -109,7 +109,13 @@ if (!in_array($status, ['Upcoming', 'Completed', 'Cancelled', 'Active', 'Past'],
 }
 
 /* Image upload to Azure Blob Storage */
-$imageFile = $_FILES['workshop_image'] ?? $_FILES['image'] ?? $_FILES['package_image'] ?? null;
+$imageFile = $_FILES['workshop-images']
+    ?? $_FILES['workshop_image']
+    ?? $_FILES['workshop_images']
+    ?? $_FILES['workshop-image']
+    ?? $_FILES['image']
+    ?? $_FILES['package_image']
+    ?? null;
 if (!$imageFile || ($imageFile['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
     http_response_code(400);
     echo json_encode(['status' => '0', 'message' => 'Please select a workshop image.']);

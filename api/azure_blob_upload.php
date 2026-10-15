@@ -11,7 +11,63 @@
  * The SAS token must allow blob creation/write. Keep it secret and server-side.
  */
 
-function uploadBlobImageToAzure(array $file, string $folder = 'packages', string $itemTypeLabel = 'image'): string
+function getAzureBlobSasUrl(string $type = 'packages'): string
+{
+    if (strtolower($type) === 'workshop' || strtolower($type) === 'workshops') {
+        // Priority 1: Check known workshop SAS URL environment variable names
+        $workshopKeys = [
+            'AZURE_BLOB_CONTAINER_WORKSHOP_SAS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGES_SAS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_IMAGES_SAS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGE_SAS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_IMAGES',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGES',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS',
+            'AZURE_BLOB_CONTAINER_WORKSHOP',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_SAS',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS',
+        ];
+
+        foreach ($workshopKeys as $key) {
+            $val = trim((string) (getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? ''))));
+            if ($val !== '') {
+                return $val;
+            }
+        }
+
+        // Priority 2: Look for any environment variable starting with AZURE_BLOB_CONTAINER_WORKSH
+        foreach ([$_SERVER, $_ENV] as $source) {
+            if (is_array($source)) {
+                foreach ($source as $k => $v) {
+                    if (is_string($k) && stripos($k, 'AZURE_BLOB_CONTAINER_WORKSH') === 0 && is_string($v) && trim($v) !== '') {
+                        return trim($v);
+                    }
+                }
+            }
+        }
+    }
+
+    // Default package SAS URL (first URL in Azure App settings)
+    $packageKeys = [
+        'AZURE_BLOB_CONTAINER_SAS_URL',
+        'AZURE_BLOB_CONTAINER_PACKAGE_SAS_URL',
+        'AZURE_BLOB_CONTAINER_PACKAGES_SAS_URL',
+    ];
+
+    foreach ($packageKeys as $key) {
+        $val = trim((string) (getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? ''))));
+        if ($val !== '') {
+            return $val;
+        }
+    }
+
+    return trim((string) (getenv('AZURE_BLOB_CONTAINER_SAS_URL') ?: ($_ENV['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ($_SERVER['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ''))));
+}
+
+function uploadBlobImageToAzure(array $file, string $folder = 'packages', string $itemTypeLabel = 'image', ?string $containerSasUrl = null): string
 {
     if (!isset($file['error']) || is_array($file['error'])) {
         throw new RuntimeException("Invalid {$itemTypeLabel} upload.");
@@ -60,13 +116,13 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
         throw new RuntimeException('The PHP cURL extension is required.');
     }
 
-    $containerSasUrl = trim((string) (
-        getenv('AZURE_BLOB_CONTAINER_SAS_URL') ?:
-        ($_ENV['AZURE_BLOB_CONTAINER_SAS_URL'] ??
-        ($_SERVER['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ''))
-    ));
+    if ($containerSasUrl === null || trim($containerSasUrl) === '') {
+        $containerSasUrl = getAzureBlobSasUrl($folder);
+    }
+
+    $containerSasUrl = trim((string) $containerSasUrl);
     if ($containerSasUrl === '') {
-        throw new RuntimeException('Azure Blob Storage is not configured on the server.');
+        throw new RuntimeException("Azure Blob Storage for {$itemTypeLabel}s is not configured on the server.");
     }
 
     $parts = parse_url($containerSasUrl);
@@ -83,10 +139,20 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
     // Remove any trailing slash from the container path, preserve SAS query.
     $basePath = rtrim($parts['path'], '/');
     $cleanFolder = trim(trim($folder), '/');
-    if ($cleanFolder === '') {
-        $cleanFolder = 'uploads';
+    $randomName = bin2hex(random_bytes(16)) . '.' . $allowedTypes[$mime];
+
+    // For packages, keep backward-compatible path ('packages/<random>.<ext>')
+    if ($cleanFolder === 'packages') {
+        $blobName = 'packages/' . $randomName;
+    } else {
+        // If container path in SAS URL already contains the folder/workshop name (e.g. /workshop-images or /workshops),
+        // place directly in container to avoid redundant nesting; otherwise prepend folder.
+        if (stripos($basePath, 'workshop') !== false || stripos($basePath, $cleanFolder) !== false) {
+            $blobName = $randomName;
+        } else {
+            $blobName = ($cleanFolder !== '' ? $cleanFolder : 'uploads') . '/' . $randomName;
+        }
     }
-    $blobName = $cleanFolder . '/' . bin2hex(random_bytes(16)) . '.' . $allowedTypes[$mime];
 
     // Azure URL path segments must be URL-encoded; keep slashes between segments.
     $encodedBlobName = implode('/', array_map('rawurlencode', explode('/', $blobName)));
@@ -128,18 +194,17 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
         throw new RuntimeException("Unable to upload the {$itemTypeLabel} to Azure Blob Storage.");
     }
 
-    // Store a stable URL without SAS credentials. This requires the blob/container
-    // to be publicly readable or served through an authenticated image endpoint.
+    // Store a stable URL without SAS credentials.
     return $blobUrl;
 }
 
 function uploadPackageImageToAzure(array $file): string
 {
-    return uploadBlobImageToAzure($file, 'packages', 'package image');
+    return uploadBlobImageToAzure($file, 'packages', 'package image', getAzureBlobSasUrl('packages'));
 }
 
 function uploadWorkshopImageToAzure(array $file): string
 {
-    return uploadBlobImageToAzure($file, 'workshops', 'workshop image');
+    return uploadBlobImageToAzure($file, 'workshops', 'workshop image', getAzureBlobSasUrl('workshops'));
 }
 

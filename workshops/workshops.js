@@ -914,8 +914,10 @@ document.addEventListener('DOMContentLoaded', () => {
           formData.append(key, value == null ? '' : String(value));
         });
 
-        // PHP receives this file in $_FILES['workshop_image']
+        // PHP receives this file in $_FILES['workshop-images'] or $_FILES['workshop_image']
+        formData.append('workshop-images', imageFile);
         formData.append('workshop_image', imageFile);
+        formData.append('image', imageFile);
 
         const response = await fetch(`${API_BASE}/add_workshop.php`, {
           method: 'POST',
