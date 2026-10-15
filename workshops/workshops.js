@@ -753,21 +753,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 7. Add Workshop Form Submit
+  // 7. Add Workshop Form Submit - Azure Blob Image Upload
   if (addWorkshopForm) {
     addWorkshopForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const title = document.getElementById('addWsName')?.value.trim() || '';
+      const subtitle = document.getElementById('addWsSubtitle')?.value.trim() || '';
       const date = document.getElementById('addWsDate')?.value.trim() || '';
       const time = document.getElementById('addWsTime')?.value.trim() || '';
       const attendeeType = document.getElementById('addWsAttendee')?.value.trim() || '';
       const fee = document.getElementById('addWsFee')?.value.trim() || '';
       const about = document.getElementById('addWsAbout')?.value.trim() || '';
+      const assignSpeaker = document.getElementById('addWsAssignSpeaker')?.value.trim() || '';
       const speaker = document.getElementById('addWsSpeaker')?.value.trim() || '';
       const meetLink = document.getElementById('addWsMeetLink')?.value.trim() || '';
-      const assignSpeaker = document.getElementById('addWsAssignSpeaker')?.value.trim() || '';
-      const subtitle = document.getElementById('addWsSubtitle')?.value.trim() || '';
+
+      // Image input
+      const imageInput = document.getElementById('addWsImageInput');
+      const imageFile = imageInput?.files?.[0];
 
       // Mandatory validation checks
       if (!title) {
@@ -775,56 +779,113 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('addWsName')?.focus();
         return;
       }
-      if (!date) {
-        showToast('Please enter workshop date.', 'error');
-        document.getElementById('addWsDate')?.focus();
+
+      if (/[0-9]/.test(title)) {
+        showToast('Workshop name should not contain numbers.', 'error');
+        document.getElementById('addWsName')?.focus();
         return;
       }
-      if (!time) {
-        showToast('Please enter workshop time.', 'error');
-        document.getElementById('addWsTime')?.focus();
-        return;
-      }
-      if (!attendeeType) {
-        showToast('Please select attendee type.', 'error');
-        document.getElementById('addWsAttendee')?.focus();
-        return;
-      }
-      if (!fee) {
-        showToast('Please enter registration fee.', 'error');
-        document.getElementById('addWsFee')?.focus();
-        return;
-      }
-      if (!about) {
-        showToast('Please enter details about the workshop.', 'error');
-        document.getElementById('addWsAbout')?.focus();
-        return;
-      }
-      if (!speaker) {
-        showToast('Please enter details about the speaker.', 'error');
-        document.getElementById('addWsSpeaker')?.focus();
-        return;
-      }
-      if (!meetLink) {
-        showToast('Please enter meet link.', 'error');
-        document.getElementById('addWsMeetLink')?.focus();
-        return;
-      }
-      if (!assignSpeaker) {
-        showToast('Please enter or assign speaker.', 'error');
-        document.getElementById('addWsAssignSpeaker')?.focus();
-        return;
-      }
+
       if (!subtitle) {
         showToast('Please enter workshop subtitle.', 'error');
         document.getElementById('addWsSubtitle')?.focus();
         return;
       }
 
+      if (/[0-9]/.test(subtitle)) {
+        showToast('Workshop subtitle should not contain numbers.', 'error');
+        document.getElementById('addWsSubtitle')?.focus();
+        return;
+      }
+
+      if (!date) {
+        showToast('Please enter workshop date.', 'error');
+        document.getElementById('addWsDate')?.focus();
+        return;
+      }
+
+      if (!time) {
+        showToast('Please enter workshop time.', 'error');
+        document.getElementById('addWsTime')?.focus();
+        return;
+      }
+
+      if (!attendeeType) {
+        showToast('Please select attendee type.', 'error');
+        document.getElementById('addWsAttendee')?.focus();
+        return;
+      }
+
+      if (!fee) {
+        showToast('Please enter registration fee.', 'error');
+        document.getElementById('addWsFee')?.focus();
+        return;
+      }
+
+      if (!/^\d+(\.\d{1,2})?$/.test(fee)) {
+        showToast('Please enter a valid registration fee.', 'error');
+        document.getElementById('addWsFee')?.focus();
+        return;
+      }
+
+      if (!about) {
+        showToast('Please enter details about the workshop.', 'error');
+        document.getElementById('addWsAbout')?.focus();
+        return;
+      }
+
+      if (!assignSpeaker) {
+        showToast('Please enter or assign speaker.', 'error');
+        document.getElementById('addWsAssignSpeaker')?.focus();
+        return;
+      }
+
+      if (/[0-9]/.test(assignSpeaker)) {
+        showToast('Speaker name should not contain numbers.', 'error');
+        document.getElementById('addWsAssignSpeaker')?.focus();
+        return;
+      }
+
+      if (!speaker) {
+        showToast('Please enter details about the speaker.', 'error');
+        document.getElementById('addWsSpeaker')?.focus();
+        return;
+      }
+
+      if (!meetLink) {
+        showToast('Please enter meet link.', 'error');
+        document.getElementById('addWsMeetLink')?.focus();
+        return;
+      }
+
+      // Image validation
+      if (!imageFile) {
+        showToast('Please select a workshop image.', 'error');
+        imageInput?.focus();
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+      if (!allowedTypes.includes(imageFile.type)) {
+        showToast('Only JPG, PNG and WebP images are allowed.', 'error');
+        imageInput?.focus();
+        return;
+      }
+
+      const maxImageSize = 5 * 1024 * 1024; // 5 MB
+
+      if (imageFile.size > maxImageSize) {
+        showToast('Image size must not exceed 5 MB.', 'error');
+        imageInput?.focus();
+        return;
+      }
+
       const submitBtn = addWorkshopForm.querySelector('button[type="submit"]');
+
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Saving...</span>';
+        submitBtn.innerHTML = '<span>Uploading image & saving...</span>';
       }
 
       const payload = {
@@ -846,28 +907,50 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       try {
+        // Send workshop fields and image as multipart/form-data
+        const formData = new FormData();
+
+        Object.entries(payload).forEach(([key, value]) => {
+          formData.append(key, value == null ? '' : String(value));
+        });
+
+        // PHP receives this file in $_FILES['workshop_image']
+        formData.append('workshop_image', imageFile);
+
         const response = await fetch(`${API_BASE}/add_workshop.php`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          headers: {
+            'Accept': 'application/json'
+          },
+          body: formData
         });
-        const res = await response.json();
-        if (res.status === '1') {
-          showToast('Workshop created successfully!');
-          switchView(workshopsListView);
-          fetchWorkshops(1);
-        } else {
-          alert(res.message || 'Failed to create workshop.');
+
+        const res = await response.json().catch(() => ({}));
+
+        if (!response.ok || res.status !== '1') {
+          throw new Error(res.message || 'Failed to create workshop.');
         }
-      } catch (err) {
-        console.error(err);
+
         showToast('Workshop created successfully!');
+
+        addWorkshopForm.reset();
+
+        const selectedFileName = document.getElementById('addWsFileName');
+        if (selectedFileName) {
+          selectedFileName.textContent = '';
+        }
+
         switchView(workshopsListView);
-        fetchWorkshops(1);
+        await fetchWorkshops(1);
+
+      } catch (err) {
+        console.error('Add workshop error:', err);
+        showToast(err.message || 'Failed to create workshop.', 'error');
+
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Save Workshop</span>';
+          submitBtn.innerHTML = '<span>Add</span>';
         }
       }
     });
@@ -1186,6 +1269,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const addWsBrowseBtn = document.getElementById('addWsBrowseBtn');
   const addWsImageInput = document.getElementById('addWsImageInput');
   const addWsFileName = document.getElementById('addWsFileName');
+  const addWsDropzoneBox = document.getElementById('addWsDropzoneBox');
+
   if (addWsBrowseBtn && addWsImageInput) {
     addWsBrowseBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1195,6 +1280,31 @@ document.addEventListener('DOMContentLoaded', () => {
     addWsImageInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files[0] && addWsFileName) {
         addWsFileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+
+  if (addWsDropzoneBox && addWsImageInput) {
+    ['dragenter', 'dragover'].forEach(evt => {
+      addWsDropzoneBox.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addWsDropzoneBox.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      addWsDropzoneBox.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addWsDropzoneBox.classList.remove('drag-over');
+      });
+    });
+    addWsDropzoneBox.addEventListener('drop', (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        addWsImageInput.files = e.dataTransfer.files;
+        if (addWsFileName) {
+          addWsFileName.textContent = e.dataTransfer.files[0].name;
+        }
       }
     });
   }

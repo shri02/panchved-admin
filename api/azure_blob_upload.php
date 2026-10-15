@@ -1,6 +1,6 @@
 <?php
 /**
- * Upload a package image to Azure Blob Storage.
+ * Upload an image (Package, Workshop, etc.) to Azure Blob Storage.
  *
  * Required environment variable:
  * AZURE_BLOB_CONTAINER_SAS_URL
@@ -11,23 +11,23 @@
  * The SAS token must allow blob creation/write. Keep it secret and server-side.
  */
 
-function uploadPackageImageToAzure(array $file): string
+function uploadBlobImageToAzure(array $file, string $folder = 'packages', string $itemTypeLabel = 'image'): string
 {
     if (!isset($file['error']) || is_array($file['error'])) {
-        throw new RuntimeException('Invalid image upload.');
+        throw new RuntimeException("Invalid {$itemTypeLabel} upload.");
     }
 
     if ($file['error'] !== UPLOAD_ERR_OK) {
         $messages = [
-            UPLOAD_ERR_INI_SIZE   => 'The uploaded image exceeds the server upload limit.',
-            UPLOAD_ERR_FORM_SIZE  => 'The uploaded image is too large.',
-            UPLOAD_ERR_PARTIAL    => 'The image upload was incomplete. Please try again.',
-            UPLOAD_ERR_NO_FILE    => 'Please select a package image.',
+            UPLOAD_ERR_INI_SIZE   => "The uploaded {$itemTypeLabel} exceeds the server upload limit.",
+            UPLOAD_ERR_FORM_SIZE  => "The uploaded {$itemTypeLabel} is too large.",
+            UPLOAD_ERR_PARTIAL    => "The {$itemTypeLabel} upload was incomplete. Please try again.",
+            UPLOAD_ERR_NO_FILE    => "Please select a {$itemTypeLabel}.",
             UPLOAD_ERR_NO_TMP_DIR => 'The server is missing a temporary upload directory.',
-            UPLOAD_ERR_CANT_WRITE => 'The server could not save the uploaded image.',
-            UPLOAD_ERR_EXTENSION  => 'The image upload was blocked by a server extension.',
+            UPLOAD_ERR_CANT_WRITE => "The server could not save the uploaded {$itemTypeLabel}.",
+            UPLOAD_ERR_EXTENSION  => "The {$itemTypeLabel} upload was blocked by a server extension.",
         ];
-        throw new RuntimeException($messages[$file['error']] ?? 'Image upload failed.');
+        throw new RuntimeException($messages[$file['error']] ?? "{$itemTypeLabel} upload failed.");
     }
 
     if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
@@ -60,7 +60,11 @@ function uploadPackageImageToAzure(array $file): string
         throw new RuntimeException('The PHP cURL extension is required.');
     }
 
-    $containerSasUrl = trim((string) getenv('AZURE_BLOB_CONTAINER_SAS_URL'));
+    $containerSasUrl = trim((string) (
+        getenv('AZURE_BLOB_CONTAINER_SAS_URL') ?:
+        ($_ENV['AZURE_BLOB_CONTAINER_SAS_URL'] ??
+        ($_SERVER['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ''))
+    ));
     if ($containerSasUrl === '') {
         throw new RuntimeException('Azure Blob Storage is not configured on the server.');
     }
@@ -78,7 +82,11 @@ function uploadPackageImageToAzure(array $file): string
 
     // Remove any trailing slash from the container path, preserve SAS query.
     $basePath = rtrim($parts['path'], '/');
-    $blobName = 'packages/' . bin2hex(random_bytes(16)) . '.' . $allowedTypes[$mime];
+    $cleanFolder = trim(trim($folder), '/');
+    if ($cleanFolder === '') {
+        $cleanFolder = 'uploads';
+    }
+    $blobName = $cleanFolder . '/' . bin2hex(random_bytes(16)) . '.' . $allowedTypes[$mime];
 
     // Azure URL path segments must be URL-encoded; keep slashes between segments.
     $encodedBlobName = implode('/', array_map('rawurlencode', explode('/', $blobName)));
@@ -87,7 +95,7 @@ function uploadPackageImageToAzure(array $file): string
 
     $stream = fopen($file['tmp_name'], 'rb');
     if ($stream === false) {
-        throw new RuntimeException('Unable to read the uploaded image.');
+        throw new RuntimeException("Unable to read the uploaded {$itemTypeLabel}.");
     }
 
     $ch = curl_init($uploadUrl);
@@ -113,14 +121,25 @@ function uploadPackageImageToAzure(array $file): string
     fclose($stream);
 
     if ($responseBody === false || $httpCode !== 201) {
-        error_log('Azure package image upload failed. HTTP=' . $httpCode . '; cURL=' . $curlError . '; response=' . substr((string) $responseBody, 0, 1000));
+        error_log("Azure {$itemTypeLabel} upload failed. HTTP=" . $httpCode . '; cURL=' . $curlError . '; response=' . substr((string) $responseBody, 0, 1000));
         if ($httpCode === 403) {
             throw new RuntimeException('Azure rejected the upload. Check the SAS permissions and expiry.');
         }
-        throw new RuntimeException('Unable to upload the image to Azure Blob Storage.');
+        throw new RuntimeException("Unable to upload the {$itemTypeLabel} to Azure Blob Storage.");
     }
 
     // Store a stable URL without SAS credentials. This requires the blob/container
     // to be publicly readable or served through an authenticated image endpoint.
     return $blobUrl;
 }
+
+function uploadPackageImageToAzure(array $file): string
+{
+    return uploadBlobImageToAzure($file, 'packages', 'package image');
+}
+
+function uploadWorkshopImageToAzure(array $file): string
+{
+    return uploadBlobImageToAzure($file, 'workshops', 'workshop image');
+}
+
