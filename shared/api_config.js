@@ -50,13 +50,21 @@
       localStorage.removeItem('ocayur_token');
       localStorage.removeItem('panchved_user');
       localStorage.removeItem('panchved_token');
-      window.location.href = isInSubfolder ? '../index.html' : 'index.html';
+      window.location.replace(isInSubfolder ? '../index.html' : 'index.html');
     },
     requireAuth: function () {
       const user = this.getUser();
-      const currentPage = window.location.pathname.split('/').pop();
-      if (!user && currentPage !== 'index.html' && currentPage !== 'login.html' && currentPage !== '') {
-        // Optional redirect if unauthenticated, or allow guest viewing
+      const rawPath = (window.location.pathname || '').toLowerCase();
+      const filename = rawPath.split('/').pop().split('?')[0].split('#')[0];
+      const isAuthPage = filename === 'index.html' || filename === 'login.html' || filename === '' || rawPath.endsWith('/');
+
+      if (!user && !isAuthPage) {
+        if (document.documentElement) {
+          document.documentElement.style.display = 'none';
+        }
+        const loginUrl = isInSubfolder ? '../index.html' : 'index.html';
+        window.location.replace(loginUrl);
+        return null;
       }
       return user;
     },
@@ -81,6 +89,9 @@
 
   // Backwards compatibility alias
   window.PanchvedAuth = window.OcayurAuth;
+
+  // Enforce authentication immediately on script evaluation
+  window.OcayurAuth.requireAuth();
 
   // Toast notification helper for all screens
   window.showAppToast = function (message, type = 'success') {
