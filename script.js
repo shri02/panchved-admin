@@ -154,6 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
           auth.setUser(result.user, result.token);
         } else {
           const serialized = JSON.stringify(result.user);
+          localStorage.setItem('ocayur_admin_user', serialized);
+          localStorage.setItem('panchved_admin_user', serialized);
           localStorage.setItem('ocayur_user', serialized);
           localStorage.setItem('ocayur_token', result.token || '');
           localStorage.setItem('panchved_user', serialized);

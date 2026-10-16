@@ -22,22 +22,32 @@
   window.OcayurAuth = {
     getUser: function () {
       try {
-        const u = localStorage.getItem('ocayur_user') || localStorage.getItem('panchved_user');
-        return u ? JSON.parse(u) : null;
+        const u = localStorage.getItem('ocayur_admin_user') || localStorage.getItem('panchved_admin_user') || localStorage.getItem('ocayur_user') || localStorage.getItem('panchved_user');
+        if (!u) return null;
+        const parsed = JSON.parse(u);
+        const role = (parsed && parsed.role ? String(parsed.role).toLowerCase() : '');
+        if (role !== 'admin' && role !== 'super admin' && role !== 'administrator') {
+          return null;
+        }
+        return parsed;
       } catch (e) {
         return null;
       }
     },
     getToken: function () {
-      return localStorage.getItem('ocayur_token') || localStorage.getItem('panchved_token') || '';
+      return localStorage.getItem('ocayur_admin_token') || localStorage.getItem('panchved_admin_token') || localStorage.getItem('ocayur_token') || localStorage.getItem('panchved_token') || '';
     },
     setUser: function (user, token) {
       if (user) {
         const serialized = JSON.stringify(user);
+        localStorage.setItem('ocayur_admin_user', serialized);
+        localStorage.setItem('panchved_admin_user', serialized);
         localStorage.setItem('ocayur_user', serialized);
         localStorage.setItem('panchved_user', serialized);
       }
       if (token) {
+        localStorage.setItem('ocayur_admin_token', token);
+        localStorage.setItem('panchved_admin_token', token);
         localStorage.setItem('ocayur_token', token);
         localStorage.setItem('panchved_token', token);
       }
@@ -46,6 +56,10 @@
       try {
         await fetch(`${window.API_BASE_URL}/logout.php`, { method: 'POST' }).catch(() => {});
       } catch (_) {}
+      localStorage.removeItem('ocayur_admin_user');
+      localStorage.removeItem('panchved_admin_user');
+      localStorage.removeItem('ocayur_admin_token');
+      localStorage.removeItem('panchved_admin_token');
       localStorage.removeItem('ocayur_user');
       localStorage.removeItem('ocayur_token');
       localStorage.removeItem('panchved_user');

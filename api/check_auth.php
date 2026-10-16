@@ -29,7 +29,8 @@ if (!$user && $bearer_token) {
     }
 }
 
-if ($user) {
+$roleLower = strtolower(trim((string)($user['role'] ?? '')));
+if ($user && in_array($roleLower, ['admin', 'super admin', 'administrator'], true)) {
     echo json_encode([
         'status' => '1',
         'authenticated' => true,
@@ -45,6 +46,6 @@ if ($user) {
     echo json_encode([
         'status' => '0',
         'authenticated' => false,
-        'message' => 'No active session.'
+        'message' => 'No active admin session.'
     ]);
 }

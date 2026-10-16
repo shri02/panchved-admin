@@ -57,9 +57,17 @@ if ($connection1) {
         }
         mysqli_stmt_close($stmt);
     }
+if ($user) {
+    $roleLower = strtolower(trim((string)($user['role'] ?? '')));
+    if (!in_array($roleLower, ['admin', 'super admin', 'administrator'], true)) {
+        http_response_code(403);
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Access denied. Admin credentials required.'
+        ]);
+        exit;
+    }
 }
-
-// 3. Graceful fallback if database user is not found or connection is unavailable
 if (!$user) {
     if ($user_session) {
         $user = [
