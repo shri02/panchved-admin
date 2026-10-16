@@ -145,6 +145,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.user-avatar-sm:hover,
+.user-avatar-sm:focus-visible {
+  transform: scale(1.05);
+  color: var(--primary-teal);
 }
 
 .user-avatar-sm svg {
@@ -354,12 +363,18 @@ body {
   box-shadow: var(--shadow-subtle);
   cursor: pointer;
   user-select: none;
+  text-decoration: none;
+  color: inherit;
   transition: all var(--transition-fast);
 }
 
-.user-profile-badge:hover {
-  border-color: var(--border-hover);
-  box-shadow: 0 3px 12px rgba(44, 62, 45, 0.06);
+.user-profile-badge:hover,
+.user-profile-badge:focus-visible {
+  border-color: var(--brand-accent);
+  box-shadow: 0 4px 14px rgba(114, 63, 30, 0.12);
+  text-decoration: none;
+  color: inherit;
+  transform: translateY(-1px);
 }
 
 .avatar-circle {

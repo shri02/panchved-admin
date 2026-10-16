@@ -1,0 +1,535 @@
+/**
+ * Ocayur Admin - Profile Page Stylesheet
+ * Brand palette: #484831 (deep olive), #723F1E (terracotta), #FAF7F2 (warm ivory)
+ */
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* ==========================================================================
+   Hero Identity Card
+   ========================================================================== */
+.profile-hero-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: 0 4px 20px rgba(72, 72, 49, 0.04);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--transition-normal);
+}
+
+.profile-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+}
+
+.profile-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.profile-hero-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-hero-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #303020 100%);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 16px rgba(72, 72, 49, 0.2);
+  border: 3px solid #FFFFFF;
+}
+
+.profile-hero-status-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.profile-hero-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-hero-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: rgba(72, 72, 49, 0.08);
+  color: var(--brand-primary);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.status-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.profile-hero-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--brand-primary);
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.profile-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.hero-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hero-meta-item svg {
+  width: 15px;
+  height: 15px;
+  color: var(--brand-accent);
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Profile Grid (Forms Layout)
+   ========================================================================== */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 992px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.card-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: rgba(72, 72, 49, 0.08);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-header-icon.accent-icon {
+  background: rgba(114, 63, 30, 0.08);
+  color: var(--brand-accent);
+}
+
+.card-header-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.card-header-text {
+  flex: 1;
+}
+
+.card-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand-primary);
+  margin: 0 0 4px 0;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Form Components & Inputs
+   ========================================================================== */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.label-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+}
+
+.required-star {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.input-wrapper,
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #FFFFFF;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.input-field:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(72, 72, 49, 0.12);
+}
+
+.input-field.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fffaf0;
+}
+
+.input-readonly {
+  background: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.form-row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Password Toggle Eye */
+.password-input-wrapper .input-field {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color var(--transition-fast);
+}
+
+.password-toggle-btn:hover {
+  color: var(--brand-primary);
+}
+
+.password-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Field Error */
+.field-error {
+  font-size: 12px;
+  color: #ef4444;
+  display: none;
+  min-height: 16px;
+  font-weight: 500;
+}
+
+.field-error.visible {
+  display: block;
+}
+
+/* Password Strength Meter */
+.strength-meter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.strength-bar-track {
+  flex: 1;
+  height: 5px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.strength-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94a3b8;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* Password Tips Hint */
+.password-tips {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.password-tips svg {
+  width: 15px;
+  height: 15px;
+  color: var(--brand-accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Form Actions */
+.form-actions {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 24px;
+  border-radius: var(--radius-md);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(72, 72, 49, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #373725;
+  box-shadow: 0 6px 16px rgba(72, 72, 49, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-accent {
+  background-color: var(--brand-accent);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(114, 63, 30, 0.2);
+}
+
+.btn-accent:hover:not(:disabled) {
+  background-color: #5c3217;
+  box-shadow: 0 6px 16px rgba(114, 63, 30, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Alerts */
+.form-alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-alert.alert-success {
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.form-alert.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+/* Active Profile Badge Highlight */
+.user-profile-badge.active-profile {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(72, 72, 49, 0.15);
+  background: #fbfbf8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .profile-hero-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .profile-hero-badge-row {
+    justify-content: center;
+  }
+
+  .profile-hero-meta {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .form-row-two {
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .profile-hero-card {
+    padding: 22px 18px;
+  }
+
+  .profile-card {
+    padding: 20px 16px;
+  }
+}

@@ -3,7 +3,7 @@
  */
 
 (function () {
-  const subfolders = ['patients', 'doctors', 'appointments', 'dashboard', 'packages', 'workshops', 'shared'];
+  const subfolders = ['patients', 'doctors', 'appointments', 'dashboard', 'packages', 'workshops', 'profile', 'shared'];
   const isInSubfolder = subfolders.some(folder => window.location.pathname.includes('/' + folder + '/'));
   const isDigitalBolt = window.location.hostname.includes('digitalbolt.co');
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -66,10 +66,12 @@
 
       const userNameEls = document.querySelectorAll('.user-name');
       const userRoleEls = document.querySelectorAll('.user-role');
+      const userEmailEls = document.querySelectorAll('.user-email');
       const welcomeText = document.querySelector('.welcome-text');
 
       userNameEls.forEach(el => el.textContent = user.full_name || user.username || 'Admin');
       userRoleEls.forEach(el => el.textContent = user.role || 'Admin');
+      userEmailEls.forEach(el => el.textContent = user.email || 'admin@ocayur.com');
       
       if (welcomeText && welcomeText.textContent.includes('Welcome Back')) {
         welcomeText.textContent = `Welcome Back ${user.full_name || user.username || 'Admin'}!`;
@@ -441,6 +443,20 @@
       e.preventDefault();
       e.stopPropagation();
       window.openLogoutModal();
+      return;
+    }
+
+    const profileTrigger = e.target.closest('.user-profile-badge, .user-avatar-sm, [data-action="profile"]');
+    if (profileTrigger) {
+      const href = profileTrigger.getAttribute('href');
+      if (!href || href === '#' || href === 'javascript:void(0);') {
+        e.preventDefault();
+        const isAlreadyProfile = window.location.pathname.includes('/profile/');
+        if (!isAlreadyProfile) {
+          const profileUrl = isInSubfolder ? '../profile/profile.html' : 'profile/profile.html';
+          window.location.href = profileUrl;
+        }
+      }
       return;
     }
 
