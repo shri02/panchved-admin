@@ -192,6 +192,7 @@ if ($data_result) {
         $doc['years_of_experience'] = (int) $doc['years_of_experience'];
         $doc['start_time'] = !empty($doc['start_time']) ? $doc['start_time'] : '09:00:00';
         $doc['end_time'] = !empty($doc['end_time']) ? $doc['end_time'] : '17:00:00';
+        $doc['referral_code'] = $doc['referral_code'] ?? '';
         $doctors[] = $doc;
     }
 } else {

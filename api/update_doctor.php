@@ -91,6 +91,7 @@ $expertise = trim((string) ($data['expertise'] ?? $existing_doctor['expertise'])
 $area = trim((string) ($data['area'] ?? $existing_doctor['area']));
 $registration_number = trim((string) ($data['registration_number'] ?? $data['registrationNumber'] ?? $data['regNumber'] ?? $existing_doctor['registration_number']));
 $hpr_registration_number = trim((string) ($data['hpr_registration_number'] ?? $data['hprNumber'] ?? $data['hprRegNumber'] ?? $existing_doctor['hpr_registration_number']));
+$referral_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? ($existing_doctor['referral_code'] ?? ''))));
 $start_time_input = trim((string) ($data['start_time'] ?? $data['startTime'] ?? ($existing_doctor['start_time'] ?? '09:00:00')));
 $end_time_input = trim((string) ($data['end_time'] ?? $data['endTime'] ?? ($existing_doctor['end_time'] ?? '17:00:00')));
 $status = trim((string) ($data['status'] ?? $existing_doctor['status']));
@@ -261,53 +262,112 @@ if ($hpr_registration_number === '') {
    EXECUTE UPDATE
 ========================================= */
 
-$update_sql = "
-    UPDATE doctors SET
-        full_name = ?,
-        date_of_birth = ?,
-        phone_number = ?,
-        gender = ?,
-        email = ?,
-        years_of_experience = ?,
-        expertise = ?,
-        area = ?,
-        registration_number = ?,
-        hpr_registration_number = ?,
-        start_time = ?,
-        end_time = ?,
-        status = ?
-    WHERE id = ?
-";
-
-$up_stmt = mysqli_prepare($connection1, $update_sql);
-
-if (!$up_stmt) {
-    echo json_encode([
-        'status' => '0',
-        'message' => 'SQL prepare failed.',
-        'error' => mysqli_error($connection1)
-    ]);
-    exit;
+// Check if referral_code column exists
+$has_ref_col = false;
+$ref_col_res = @mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
+if ($ref_col_res && mysqli_num_rows($ref_col_res) > 0) {
+    $has_ref_col = true;
 }
 
-mysqli_stmt_bind_param(
-    $up_stmt,
-    "sssssisssssssi",
-    $full_name,
-    $formatted_dob,
-    $phone_number,
-    $gender,
-    $email,
-    $years_of_experience,
-    $expertise,
-    $area,
-    $registration_number,
-    $hpr_registration_number,
-    $start_time,
-    $end_time,
-    $status,
-    $id
-);
+if ($has_ref_col) {
+    $update_sql = "
+        UPDATE doctors SET
+            full_name = ?,
+            date_of_birth = ?,
+            phone_number = ?,
+            gender = ?,
+            email = ?,
+            years_of_experience = ?,
+            expertise = ?,
+            area = ?,
+            registration_number = ?,
+            hpr_registration_number = ?,
+            referral_code = ?,
+            start_time = ?,
+            end_time = ?,
+            status = ?
+        WHERE id = ?
+    ";
+
+    $up_stmt = mysqli_prepare($connection1, $update_sql);
+    if (!$up_stmt) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'SQL prepare failed.',
+            'error' => mysqli_error($connection1)
+        ]);
+        exit;
+    }
+
+    $ref_val = ($referral_code !== '') ? $referral_code : null;
+
+    mysqli_stmt_bind_param(
+        $up_stmt,
+        "sssssissssssssi",
+        $full_name,
+        $formatted_dob,
+        $phone_number,
+        $gender,
+        $email,
+        $years_of_experience,
+        $expertise,
+        $area,
+        $registration_number,
+        $hpr_registration_number,
+        $ref_val,
+        $start_time,
+        $end_time,
+        $status,
+        $id
+    );
+} else {
+    $update_sql = "
+        UPDATE doctors SET
+            full_name = ?,
+            date_of_birth = ?,
+            phone_number = ?,
+            gender = ?,
+            email = ?,
+            years_of_experience = ?,
+            expertise = ?,
+            area = ?,
+            registration_number = ?,
+            hpr_registration_number = ?,
+            start_time = ?,
+            end_time = ?,
+            status = ?
+        WHERE id = ?
+    ";
+
+    $up_stmt = mysqli_prepare($connection1, $update_sql);
+    if (!$up_stmt) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'SQL prepare failed.',
+            'error' => mysqli_error($connection1)
+        ]);
+        exit;
+    }
+
+    mysqli_stmt_bind_param(
+        $up_stmt,
+        "sssssisssssssi",
+        $full_name,
+        $formatted_dob,
+        $phone_number,
+        $gender,
+        $email,
+        $years_of_experience,
+        $expertise,
+        $area,
+        $registration_number,
+        $hpr_registration_number,
+        $start_time,
+        $end_time,
+        $status,
+        $id
+    );
+}
 
 if (mysqli_stmt_execute($up_stmt)) {
     mysqli_stmt_close($up_stmt);
@@ -329,6 +389,7 @@ if (mysqli_stmt_execute($up_stmt)) {
             'area' => $area,
             'registration_number' => $registration_number,
             'hpr_registration_number' => $hpr_registration_number,
+            'referral_code' => $referral_code,
             'start_time' => $start_time,
             'end_time' => $end_time,
             'status' => $status

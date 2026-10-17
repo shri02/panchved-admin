@@ -152,6 +152,7 @@ if ($apt_check && $apt_row = mysqli_fetch_assoc($apt_check)) {
     $total_appointments = (int) $apt_row['count'];
 }
 $doctor['total_appointments'] = $total_appointments;
+$doctor['referral_code'] = $doctor['referral_code'] ?? '';
 
 http_response_code(200);
 echo json_encode([

@@ -589,6 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-area', doc.area || '-');
       row.setAttribute('data-reg', doc.registration_number || '-');
       row.setAttribute('data-hpr', doc.hpr_registration_number || '-');
+      row.setAttribute('data-referral-code', doc.referral_code || '');
       row.setAttribute('data-status', status);
 
       row.innerHTML = `
@@ -867,6 +868,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const hprEl = document.getElementById('editHpr');
       if (hprEl) hprEl.value = row.getAttribute('data-hpr') || '';
 
+      const refEl = document.getElementById('editReferralCode');
+      if (refEl) refEl.value = row.getAttribute('data-referral-code') || '';
+
       showView(editDoctorView);
 
       // Fetch fresh doctor details from API
@@ -911,6 +915,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (areaEl) areaEl.value = d.area || '';
           if (regEl) regEl.value = d.registration_number || '';
           if (hprEl) hprEl.value = d.hpr_registration_number || '';
+          if (refEl) refEl.value = d.referral_code || '';
         }
       } catch (err) {
         console.warn('Could not fetch fresh single doctor data:', err);
@@ -945,6 +950,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalDocArea) modalDocArea.textContent = row.getAttribute('data-area') || '-';
       if (modalDocReg) modalDocReg.textContent = row.getAttribute('data-reg') || '-';
       if (modalDocHpr) modalDocHpr.textContent = row.getAttribute('data-hpr') || '-';
+      const modalDocReferral = document.getElementById('modalDocReferral');
+      if (modalDocReferral) modalDocReferral.textContent = row.getAttribute('data-referral-code') || 'None (Direct)';
       if (modalDocAppointments) modalDocAppointments.textContent = '-';
 
       openDocModal();
@@ -975,6 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (modalDocArea) modalDocArea.textContent = d.area || '-';
           if (modalDocReg) modalDocReg.textContent = d.registration_number || '-';
           if (modalDocHpr) modalDocHpr.textContent = d.hpr_registration_number || '-';
+          if (modalDocReferral) modalDocReferral.textContent = d.referral_code || 'None (Direct)';
           if (modalDocAppointments) modalDocAppointments.textContent = String(d.total_appointments ?? 0);
         }
       } catch (err) {
@@ -1134,6 +1142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         area: area,
         registration_number: reg,
         hpr_registration_number: hpr,
+        referral_code: document.getElementById('addReferralCode') ? document.getElementById('addReferralCode').value.trim().toUpperCase() : '',
         status: 'Active'
       };
 
@@ -1302,7 +1311,8 @@ document.addEventListener('DOMContentLoaded', () => {
         expertise: expertise,
         area: area,
         registration_number: reg,
-        hpr_registration_number: hpr
+        hpr_registration_number: hpr,
+        referral_code: document.getElementById('editReferralCode') ? document.getElementById('editReferralCode').value.trim().toUpperCase() : ''
       };
 
       try {

@@ -61,6 +61,7 @@ $registration_number = trim((string) ($data['registration_number'] ?? $data['reg
 $hpr_registration_number = trim((string) ($data['hpr_registration_number'] ?? $data['hprNumber'] ?? $data['hprRegNumber'] ?? ''));
 $start_time_input = trim((string) ($data['start_time'] ?? $data['startTime'] ?? '09:00'));
 $end_time_input = trim((string) ($data['end_time'] ?? $data['endTime'] ?? '17:00'));
+$referral_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? '')));
 $status = trim((string) ($data['status'] ?? 'Active'));
 
 // Format Start Time and End Time
@@ -310,53 +311,112 @@ if ($hpr_registration_number !== '') {
    INSERT DOCTOR
 ========================================= */
 
-$insert_query = "
-    INSERT INTO doctors (
-        full_name,
-        date_of_birth,
-        phone_number,
-        gender,
-        email,
-        years_of_experience,
-        expertise,
-        area,
-        registration_number,
-        hpr_registration_number,
-        start_time,
-        end_time,
-        status
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-";
-
-$stmt = mysqli_prepare($connection1, $insert_query);
-
-if (!$stmt) {
-    echo json_encode([
-        'status' => '0',
-        'message' => 'SQL prepare failed.',
-        'error' => mysqli_error($connection1)
-    ]);
-    exit;
+// Check if referral_code column exists
+$has_ref_col = false;
+$ref_col_res = @mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
+if ($ref_col_res && mysqli_num_rows($ref_col_res) > 0) {
+    $has_ref_col = true;
 }
 
-mysqli_stmt_bind_param(
-    $stmt,
-    "sssssisssssss",
-    $full_name,
-    $formatted_dob,
-    $phone_number,
-    $gender,
-    $email,
-    $years_of_experience,
-    $expertise,
-    $area,
-    $registration_number,
-    $hpr_registration_number,
-    $start_time,
-    $end_time,
-    $status
-);
+if ($has_ref_col) {
+    $insert_query = "
+        INSERT INTO doctors (
+            full_name,
+            date_of_birth,
+            phone_number,
+            gender,
+            email,
+            years_of_experience,
+            expertise,
+            area,
+            registration_number,
+            hpr_registration_number,
+            referral_code,
+            start_time,
+            end_time,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ";
+
+    $stmt = mysqli_prepare($connection1, $insert_query);
+    if (!$stmt) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'SQL prepare failed.',
+            'error' => mysqli_error($connection1)
+        ]);
+        exit;
+    }
+
+    $ref_val = ($referral_code !== '') ? $referral_code : null;
+
+    mysqli_stmt_bind_param(
+        $stmt,
+        "sssssissssssss",
+        $full_name,
+        $formatted_dob,
+        $phone_number,
+        $gender,
+        $email,
+        $years_of_experience,
+        $expertise,
+        $area,
+        $registration_number,
+        $hpr_registration_number,
+        $ref_val,
+        $start_time,
+        $end_time,
+        $status
+    );
+} else {
+    $insert_query = "
+        INSERT INTO doctors (
+            full_name,
+            date_of_birth,
+            phone_number,
+            gender,
+            email,
+            years_of_experience,
+            expertise,
+            area,
+            registration_number,
+            hpr_registration_number,
+            start_time,
+            end_time,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ";
+
+    $stmt = mysqli_prepare($connection1, $insert_query);
+    if (!$stmt) {
+        echo json_encode([
+            'status' => '0',
+            'message' => 'SQL prepare failed.',
+            'error' => mysqli_error($connection1)
+        ]);
+        exit;
+    }
+
+    mysqli_stmt_bind_param(
+        $stmt,
+        "sssssisssssss",
+        $full_name,
+        $formatted_dob,
+        $phone_number,
+        $gender,
+        $email,
+        $years_of_experience,
+        $expertise,
+        $area,
+        $registration_number,
+        $hpr_registration_number,
+        $start_time,
+        $end_time,
+        $status
+    );
+}
 
 if (mysqli_stmt_execute($stmt)) {
     $doctor_id = mysqli_insert_id($connection1);
@@ -390,6 +450,7 @@ if (mysqli_stmt_execute($stmt)) {
             'area' => $area,
             'registration_number' => $registration_number,
             'hpr_registration_number' => $hpr_registration_number,
+            'referral_code' => $referral_code,
             'start_time' => $start_time,
             'end_time' => $end_time,
             'status' => $status

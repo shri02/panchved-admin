@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `doctors` (
   `area` VARCHAR(150) NOT NULL,
   `registration_number` VARCHAR(100) NOT NULL,
   `hpr_registration_number` VARCHAR(100) DEFAULT NULL,
+  `referral_code` VARCHAR(50) DEFAULT NULL,
   `start_time` TIME DEFAULT '09:00:00',
   `end_time` TIME DEFAULT '17:00:00',
   `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS `doctors` (
   UNIQUE KEY `idx_doc_email` (`email`),
   UNIQUE KEY `idx_doc_phone` (`phone_number`),
   UNIQUE KEY `idx_reg_number` (`registration_number`),
+  KEY `idx_doc_referral_code` (`referral_code`),
   KEY `idx_doc_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -238,5 +240,34 @@ INSERT INTO `workshops` (`id`, `workshop_id`, `title`, `subtitle`, `assign_speak
 (3, 'WS-003', 'Gut Microbiome & Dinacharya Summit', 'Holistic Health & Ayurveda Insights', 'Dr. Priya Patel', 'https://meet.google.com/xyz-abcd-efg', 'Dr. Priya Patel', 'Dr. Priya Patel', 'Both', DATE_ADD(CURDATE(), INTERVAL 21 DAY), '9:00 AM', 'Auditorium & Live Stream', 100, 42, 350.00, 'Explore the bridge between ancient Ayurvedic gut cleansing and cutting-edge microbiome science with actionable nutrition guides.', 'Upcoming'),
 (4, 'WS-004', 'Corporate Stress Management Webinar', 'Holistic Health & Ayurveda Insights', 'Dr. Ankit Verma', 'https://meet.google.com/xyz-abcd-efg', 'Dr. Ankit Verma', 'Dr. Ankit Verma', 'Patient', DATE_SUB(CURDATE(), INTERVAL 10 DAY), '3:00 PM', 'Online Zoom Room', 75, 60, 0.00, 'Practical breathwork, desk ergonomic routines, and mindful dietary habits for high-stress corporate environments.', 'Completed')
 ON DUPLICATE KEY UPDATE `title` = VALUES(`title`), `instructor` = VALUES(`instructor`);
+
+
+-- ----------------------------------------------------------------------------
+-- Table: referral_partners
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `referral_partners` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `partner_id` VARCHAR(50) DEFAULT NULL,
+  `name` VARCHAR(150) NOT NULL,
+  `phone_number` VARCHAR(20) NOT NULL,
+  `email` VARCHAR(150) NOT NULL,
+  `referral_code` VARCHAR(50) NOT NULL,
+  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_partner_id` (`partner_id`),
+  UNIQUE KEY `idx_referral_code` (`referral_code`),
+  KEY `idx_ref_phone` (`phone_number`),
+  KEY `idx_ref_email` (`email`),
+  KEY `idx_ref_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Sample Seed Data for Referral Partners
+INSERT INTO `referral_partners` (`id`, `partner_id`, `name`, `phone_number`, `email`, `referral_code`, `status`) VALUES
+(1, 'REF0001', 'Aarav Mehta', '9811122233', 'aarav.mehta@gmail.com', 'REF-AARAV1', 'Active'),
+(2, 'REF0002', 'Kavita Joshi', '9822233344', 'kavita.j@gmail.com', 'REF-KAVITA2', 'Active'),
+(3, 'REF0003', 'Sunil Deshmukh', '9833344455', 'sunil.d@gmail.com', 'REF-SUNIL3', 'Active')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `referral_code` = VALUES(`referral_code`);
 
 COMMIT;
