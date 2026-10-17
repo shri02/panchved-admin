@@ -132,43 +132,14 @@ if ($chk_phone_stmt) {
     mysqli_stmt_close($chk_phone_stmt);
 }
 
-// Check duplicate referral code for another partner
-$chk_code_stmt = mysqli_prepare($connection1, "SELECT id FROM referral_partners WHERE referral_code = ? AND id != ? LIMIT 1");
-if ($chk_code_stmt) {
-    mysqli_stmt_bind_param($chk_code_stmt, "si", $referral_code, $id);
-    mysqli_stmt_execute($chk_code_stmt);
-    mysqli_stmt_store_result($chk_code_stmt);
-    if (mysqli_stmt_num_rows($chk_code_stmt) > 0) {
-        mysqli_stmt_close($chk_code_stmt);
-        echo json_encode([
-            'status' => '0',
-            'message' => 'This referral code is already assigned to another partner.'
-        ]);
-        exit;
-    }
-    mysqli_stmt_close($chk_code_stmt);
-}
-
-// If referral code changed, update doctors table reference as well if needed
-$old_code = $existing_partner['referral_code'];
-if ($old_code !== $referral_code) {
-    $doc_col_check = mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
-    if ($doc_col_check && mysqli_num_rows($doc_col_check) > 0) {
-        $sync_stmt = mysqli_prepare($connection1, "UPDATE doctors SET referral_code = ? WHERE referral_code = ?");
-        if ($sync_stmt) {
-            mysqli_stmt_bind_param($sync_stmt, "ss", $referral_code, $old_code);
-            mysqli_stmt_execute($sync_stmt);
-            mysqli_stmt_close($sync_stmt);
-        }
-    }
-}
+// Referral code is permanent and immutable once created
+$referral_code = $existing_partner['referral_code'];
 
 $update_sql = "
     UPDATE referral_partners SET
         name = ?,
         phone_number = ?,
         email = ?,
-        referral_code = ?,
         status = ?
     WHERE id = ?
 ";
@@ -182,7 +153,7 @@ if (!$up_stmt) {
     exit;
 }
 
-mysqli_stmt_bind_param($up_stmt, "sssssi", $name, $phone_number, $email, $referral_code, $status, $id);
+mysqli_stmt_bind_param($up_stmt, "ssssi", $name, $phone_number, $email, $status, $id);
 
 if (mysqli_stmt_execute($up_stmt)) {
     mysqli_stmt_close($up_stmt);

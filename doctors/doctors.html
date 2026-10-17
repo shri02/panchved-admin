@@ -509,10 +509,10 @@
               <input type="text" id="editHpr" name="hprNumber" class="form-text-input" placeholder="XXXX" required>
             </div>
 
-            <!-- Row 7: Referral Code (Optional) -->
+            <!-- Row 7: Referral Code (Locked) -->
             <div class="form-field-group">
-              <label for="editReferralCode" class="form-label">Referral Code <span class="optional-badge" style="font-size:12px; font-weight:normal; color:#888;">(Optional)</span></label>
-              <input type="text" id="editReferralCode" name="referralCode" class="form-text-input" placeholder="e.g. REF-ABC1" style="text-transform: uppercase;">
+              <label for="editReferralCode" class="form-label">Doctor Referral Code <span class="optional-badge" style="font-size:12px; font-weight:normal; color:#888;">(Locked &bull; Cannot be changed)</span></label>
+              <input type="text" id="editReferralCode" name="referralCode" class="form-text-input" style="text-transform: uppercase; background: #F5F5F0; color: #5C5A48; cursor: not-allowed; border-color: #D6D2C4;" readonly>
             </div>
 
             <!-- Submit Button Row -->

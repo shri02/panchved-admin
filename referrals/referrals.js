@@ -391,8 +391,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tr.innerHTML = `
           <td>
-            <div class="partner-info-cell">
-              <div class="partner-avatar">${initials}</div>
+            <div class="partner-profile-cell partner-info-cell">
+              <div class="partner-avatar-circle partner-avatar">${initials}</div>
               <div class="partner-meta">
                 <span class="partner-name">${partner.name || '-'}</span>
                 <span class="partner-id">${partner.partner_id || '-'}</span>
@@ -402,32 +402,32 @@ document.addEventListener('DOMContentLoaded', () => {
           <td><span class="cell-phone">${partner.phone_number || '-'}</span></td>
           <td><span class="cell-email">${partner.email || '-'}</span></td>
           <td>
-            <div class="code-pill">
+            <div class="referral-code-pill code-pill">
               <span class="code-text">${code}</span>
-              <button type="button" class="btn-copy-code" title="Copy code" data-copy="${code}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <button type="button" class="copy-icon-btn btn-copy-code" title="Copy code" data-copy="${code}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
             </div>
           </td>
           <td>
-            <button type="button" class="ref-count-btn view-ref-patients-btn" data-code="${code}" data-name="${encodeURIComponent(partner.name)}" data-label="Partner">
+            <button type="button" class="referred-count-btn ref-count-btn view-ref-patients-btn ${count === 0 ? 'zero-count' : ''}" data-code="${code}" data-name="${encodeURIComponent(partner.name)}" data-label="Partner">
               <span class="ref-count-number">${count}</span>
               <span class="ref-count-sub">patient${count === 1 ? '' : 's'}</span>
             </button>
           </td>
           <td>
-            <span class="status-pill ${statusClass}">${partner.status || 'Active'}</span>
+            <span class="status-badge status-pill ${statusClass}">${partner.status || 'Active'}</span>
           </td>
           <td class="text-right">
-            <div class="action-btn-group">
-              <button type="button" class="btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(partner.name)}" data-label="Partner">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <div class="table-actions action-btn-group">
+              <button type="button" class="action-icon-btn btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(partner.name)}" data-label="Partner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
-              <button type="button" class="btn-table-action btn-edit edit-partner-btn" title="Edit Partner" data-id="${partner.id}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <button type="button" class="action-icon-btn btn-table-action btn-edit edit-partner-btn" title="Edit Partner" data-id="${partner.id}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               </button>
-              <button type="button" class="btn-table-action btn-delete delete-partner-btn" title="Delete Partner" data-id="${partner.id}" data-type="partner" data-name="${encodeURIComponent(partner.name)}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <button type="button" class="action-icon-btn btn-table-action btn-delete delete-partner-btn" title="Delete Partner" data-id="${partner.id}" data-type="partner" data-name="${encodeURIComponent(partner.name)}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
           </td>
@@ -444,8 +444,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tr.innerHTML = `
           <td>
-            <div class="partner-info-cell">
-              <div class="partner-avatar" style="background: #EBF5FB; color: #1D6F8A;">${initials}</div>
+            <div class="partner-profile-cell partner-info-cell">
+              <div class="partner-avatar-circle partner-avatar" style="background: #EBF5FB; color: #1D6F8A;">${initials}</div>
               <div class="partner-meta">
                 <span class="partner-name">${doctor.full_name || '-'}</span>
                 <span class="partner-id">${doctor.doctorid || '-'}</span>
@@ -465,29 +465,29 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </td>
           <td>
-            <div class="code-pill">
+            <div class="referral-code-pill code-pill">
               <span class="code-text">${code}</span>
-              <button type="button" class="btn-copy-code" title="Copy code" data-copy="${code}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <button type="button" class="copy-icon-btn btn-copy-code" title="Copy code" data-copy="${code}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
             </div>
           </td>
           <td>
-            <button type="button" class="ref-count-btn view-ref-patients-btn" data-code="${code}" data-name="${encodeURIComponent(doctor.full_name)}" data-label="Doctor">
+            <button type="button" class="referred-count-btn ref-count-btn view-ref-patients-btn ${count === 0 ? 'zero-count' : ''}" data-code="${code}" data-name="${encodeURIComponent(doctor.full_name)}" data-label="Doctor">
               <span class="ref-count-number">${count}</span>
               <span class="ref-count-sub">patient${count === 1 ? '' : 's'}</span>
             </button>
           </td>
           <td>
-            <span class="status-pill ${statusClass}">${doctor.status || 'Active'}</span>
+            <span class="status-badge status-pill ${statusClass}">${doctor.status || 'Active'}</span>
           </td>
           <td class="text-right">
-            <div class="action-btn-group">
-              <button type="button" class="btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(doctor.full_name)}" data-label="Doctor">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <div class="table-actions action-btn-group">
+              <button type="button" class="action-icon-btn btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(doctor.full_name)}" data-label="Doctor">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
-              <a href="../doctors/doctors.html" class="btn-table-action btn-edit" title="Manage Doctor in Doctors Page">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              <a href="../doctors/doctors.html" class="action-icon-btn btn-table-action btn-edit" title="Manage Doctor in Doctors Page">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               </a>
             </div>
           </td>
@@ -516,10 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </td>
           <td>
-            <div class="code-pill">
+            <div class="referral-code-pill code-pill">
               <span class="code-text">${code}</span>
-              <button type="button" class="btn-copy-code" title="Copy code" data-copy="${code}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <button type="button" class="copy-icon-btn btn-copy-code" title="Copy code" data-copy="${code}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               </button>
             </div>
           </td>
@@ -529,24 +529,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           </td>
           <td>
-            <button type="button" class="ref-count-btn view-ref-patients-btn" data-code="${code}" data-name="${encodeURIComponent(social.campaign_name)}" data-label="Campaign">
+            <button type="button" class="referred-count-btn ref-count-btn view-ref-patients-btn ${count === 0 ? 'zero-count' : ''}" data-code="${code}" data-name="${encodeURIComponent(social.campaign_name)}" data-label="Campaign">
               <span class="ref-count-number">${count}</span>
               <span class="ref-count-sub">patient${count === 1 ? '' : 's'}</span>
             </button>
           </td>
           <td>
-            <span class="status-pill ${statusClass}">${social.status || 'Active'}</span>
+            <span class="status-badge status-pill ${statusClass}">${social.status || 'Active'}</span>
           </td>
           <td class="text-right">
-            <div class="action-btn-group">
-              <button type="button" class="btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(social.campaign_name)}" data-label="Campaign">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <div class="table-actions action-btn-group">
+              <button type="button" class="action-icon-btn btn-table-action btn-view view-ref-patients-btn" title="View Referred Patients" data-code="${code}" data-name="${encodeURIComponent(social.campaign_name)}" data-label="Campaign">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
-              <button type="button" class="btn-table-action btn-edit edit-social-btn" title="Edit Campaign" data-id="${social.id}" data-platform="${encodeURIComponent(social.platform)}" data-campaign="${encodeURIComponent(social.campaign_name)}" data-code="${encodeURIComponent(social.referral_code)}" data-url="${encodeURIComponent(social.target_url || '')}" data-notes="${encodeURIComponent(social.notes || '')}" data-status="${social.status || 'Active'}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              <button type="button" class="action-icon-btn btn-table-action btn-edit edit-social-btn" title="Edit Campaign" data-id="${social.id}" data-platform="${encodeURIComponent(social.platform)}" data-campaign="${encodeURIComponent(social.campaign_name)}" data-code="${encodeURIComponent(social.referral_code)}" data-url="${encodeURIComponent(social.target_url || '')}" data-notes="${encodeURIComponent(social.notes || '')}" data-status="${social.status || 'Active'}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               </button>
-              <button type="button" class="btn-table-action btn-delete delete-partner-btn" title="Delete Campaign" data-id="${social.id}" data-type="social" data-name="${encodeURIComponent(social.campaign_name)}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              <button type="button" class="action-icon-btn btn-table-action btn-delete delete-partner-btn" title="Delete Campaign" data-id="${social.id}" data-type="social" data-name="${encodeURIComponent(social.campaign_name)}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
           </td>

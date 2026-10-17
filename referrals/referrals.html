@@ -421,9 +421,11 @@
         </div>
 
         <div class="form-field-group">
-          <label for="editPartnerCode" class="form-label">Referral Code <span class="required-star">*</span></label>
-          <input type="text" id="editPartnerCode" class="form-text-input code-input" style="text-transform: uppercase;" required>
-          <small class="field-hint">Note: Changing the code will update matching patient referral links.</small>
+          <label for="editPartnerCode" class="form-label">
+            Referral Code <span class="optional-badge" style="color: #8E8A76; font-size: 12px; font-weight: normal;">(Locked &bull; Cannot be changed)</span>
+          </label>
+          <input type="text" id="editPartnerCode" class="form-text-input code-input" style="text-transform: uppercase; background: #F5F5F0; color: #5C5A48; cursor: not-allowed; border-color: #D6D2C4;" readonly required>
+          <small class="field-hint">Referral code is permanent and cannot be modified once created.</small>
         </div>
 
         <div class="form-field-group">
@@ -576,8 +578,11 @@
         </div>
 
         <div class="form-field-group">
-          <label for="editSocialCode" class="form-label">Referral Code <span class="required-star">*</span></label>
-          <input type="text" id="editSocialCode" class="form-text-input code-input" style="text-transform: uppercase;" required>
+          <label for="editSocialCode" class="form-label">
+            Referral Code <span class="optional-badge" style="color: #8E8A76; font-size: 12px; font-weight: normal;">(Locked &bull; Cannot be changed)</span>
+          </label>
+          <input type="text" id="editSocialCode" class="form-text-input code-input" style="text-transform: uppercase; background: #F5F5F0; color: #5C5A48; cursor: not-allowed; border-color: #D6D2C4;" readonly required>
+          <small class="field-hint">Referral code is permanent and cannot be modified once created.</small>
         </div>
 
         <div class="form-field-group">

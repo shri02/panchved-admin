@@ -196,21 +196,23 @@
 }
 
 /* Partner Profile Cell */
-.partner-profile-cell {
+.partner-profile-cell,
+.partner-info-cell {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.partner-avatar-circle {
+.partner-avatar-circle,
+.partner-avatar {
   width: 38px;
   height: 38px;
   border-radius: 50%;
   background: #EFEBD9;
   color: var(--brand-primary, #484831);
   font-weight: 700;
-  font-size: 14px;
-  display: flex;
+  font-size: 13.5px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
@@ -235,47 +237,58 @@
 }
 
 /* Referral Code Badge with Copy */
-.referral-code-pill {
+.referral-code-pill,
+.code-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 5px 10px;
   background: #F3F1E7;
   border: 1px dashed var(--brand-primary, #484831);
   border-radius: 6px;
-  font-family: 'Courier New', Courier, monospace, monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-weight: 700;
   font-size: 13.5px;
   color: var(--brand-primary, #484831);
   letter-spacing: 0.5px;
-  cursor: pointer;
   transition: all 0.2s ease;
-  user-select: all;
 }
 
-.referral-code-pill:hover {
+.referral-code-pill:hover,
+.code-pill:hover {
   background: #E6E1CE;
   transform: translateY(-1px);
 }
 
-.copy-icon-btn {
+.copy-icon-btn,
+.btn-copy-code {
   background: none;
   border: none;
-  padding: 0;
+  padding: 2px;
   cursor: pointer;
   color: var(--brand-primary, #484831);
   display: inline-flex;
   align-items: center;
-  opacity: 0.8;
-  transition: opacity 0.15s ease;
+  justify-content: center;
+  opacity: 0.75;
+  transition: all 0.15s ease;
 }
 
-.copy-icon-btn:hover {
+.copy-icon-btn:hover,
+.btn-copy-code:hover {
   opacity: 1;
+  transform: scale(1.15);
 }
 
-/* Doctors Referred Count Badge */
-.referred-count-btn {
+.copy-icon-btn svg,
+.btn-copy-code svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Patients Referred Count Badge */
+.referred-count-btn,
+.ref-count-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -288,9 +301,11 @@
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast, 0.18s);
+  outline: none;
 }
 
-.referred-count-btn:hover {
+.referred-count-btn:hover,
+.ref-count-btn:hover {
   background: var(--brand-accent, #723F1E);
   color: #FFFFFF;
   border-color: var(--brand-accent, #723F1E);
@@ -298,22 +313,17 @@
   box-shadow: 0 3px 8px rgba(114, 63, 30, 0.25);
 }
 
-.referred-count-btn.zero-count {
+.referred-count-btn.zero-count,
+.ref-count-btn.zero-count {
   background: #F1F5F9;
   color: #64748B;
   border-color: #E2E8F0;
-  cursor: default;
-}
-
-.referred-count-btn.zero-count:hover {
-  background: #F1F5F9;
-  color: #64748B;
-  transform: none;
-  box-shadow: none;
+  cursor: pointer;
 }
 
 /* Status Badges */
-.status-badge {
+.status-badge,
+.status-pill {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
@@ -336,14 +346,16 @@
 }
 
 /* Actions in Table */
-.table-actions {
-  display: flex;
+.table-actions,
+.action-btn-group {
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
 }
 
-.action-icon-btn {
+.action-icon-btn,
+.btn-table-action {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-sm, 6px);
@@ -355,22 +367,27 @@
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast, 0.18s);
+  padding: 0;
+  text-decoration: none;
 }
 
-.action-icon-btn:hover {
+.action-icon-btn:hover,
+.btn-table-action:hover {
   background: #FFFFFF;
   border-color: var(--brand-primary, #484831);
   color: var(--brand-primary, #484831);
   transform: translateY(-1px);
 }
 
-.action-icon-btn.btn-delete:hover {
+.action-icon-btn.btn-delete:hover,
+.btn-table-action.btn-delete:hover {
   border-color: #EF4444;
   color: #EF4444;
   background: #FEE2E2;
 }
 
-.action-icon-btn svg {
+.action-icon-btn svg,
+.btn-table-action svg {
   width: 16px;
   height: 16px;
 }

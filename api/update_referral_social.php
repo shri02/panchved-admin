@@ -44,10 +44,10 @@ $target_url = trim((string) ($data['target_url'] ?? $data['targetUrl'] ?? ''));
 $notes = trim((string) ($data['notes'] ?? ''));
 $status = trim((string) ($data['status'] ?? 'Active'));
 
-if ($platform === '' || $campaign_name === '' || $referral_code === '') {
+if ($platform === '' || $campaign_name === '') {
     echo json_encode([
         'status' => '0',
-        'message' => 'Platform, Campaign Name, and Referral Code are required.'
+        'message' => 'Platform and Campaign Name are required.'
     ]);
     exit;
 }
@@ -57,26 +57,9 @@ if ($status !== 'Active' && $status !== 'Inactive') {
     $status = 'Active';
 }
 
-// Check if referral code is unique to other records
-$chk_stmt = mysqli_prepare($connection1, "SELECT id FROM social_media_referrals WHERE referral_code = ? AND id != ? LIMIT 1");
-if ($chk_stmt) {
-    mysqli_stmt_bind_param($chk_stmt, "si", $referral_code, $id);
-    mysqli_stmt_execute($chk_stmt);
-    mysqli_stmt_store_result($chk_stmt);
-    if (mysqli_stmt_num_rows($chk_stmt) > 0) {
-        mysqli_stmt_close($chk_stmt);
-        echo json_encode([
-            'status' => '0',
-            'message' => 'This referral code is already in use by another campaign.'
-        ]);
-        exit;
-    }
-    mysqli_stmt_close($chk_stmt);
-}
-
 $update_query = "
     UPDATE social_media_referrals 
-    SET platform = ?, campaign_name = ?, referral_code = ?, target_url = ?, notes = ?, status = ?
+    SET platform = ?, campaign_name = ?, target_url = ?, notes = ?, status = ?
     WHERE id = ?
 ";
 
@@ -89,7 +72,7 @@ if (!$stmt) {
     exit;
 }
 
-mysqli_stmt_bind_param($stmt, "ssssssi", $platform, $campaign_name, $referral_code, $target_url, $notes, $status, $id);
+mysqli_stmt_bind_param($stmt, "sssssi", $platform, $campaign_name, $target_url, $notes, $status, $id);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
