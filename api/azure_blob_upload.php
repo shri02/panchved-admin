@@ -11,60 +11,181 @@
  * The SAS token must allow blob creation/write. Keep it secret and server-side.
  */
 
+/**
+ * Normalizes and validates an Azure Blob Storage container SAS URL.
+ * Handles:
+ *  - Full SAS URL: https://account.blob.core.windows.net/container?sv=...&sig=...
+ *  - URL without https scheme: account.blob.core.windows.net/container?sv=...
+ *  - Quoted string: "https://account.blob.core.windows.net/container?sv=..."
+ *  - Decodes HTML entities: &amp; -> &
+ *
+ * Returns normalized URL string or null if not a valid Azure Blob container SAS URL.
+ */
+function normalizeAzureSasUrl(?string $url): ?string
+{
+    if ($url === null) {
+        return null;
+    }
+
+    $clean = trim((string) $url, " \t\n\r\0\x0B\"'\\");
+    if ($clean === '') {
+        return null;
+    }
+
+    $clean = htmlspecialchars_decode($clean, ENT_QUOTES | ENT_HTML5);
+
+    if (str_starts_with($clean, '//')) {
+        $clean = 'https:' . $clean;
+    } elseif (str_starts_with($clean, 'http://')) {
+        $clean = 'https://' . substr($clean, 7);
+    } elseif (!preg_match('#^[a-zA-Z][a-zA-Z0-9+\-.]*://#', $clean)) {
+        if (stripos($clean, '.blob.core.windows.net') !== false) {
+            $clean = 'https://' . ltrim($clean, '/');
+        } else {
+            return null;
+        }
+    }
+
+    $parts = parse_url($clean);
+    if (
+        !$parts ||
+        strtolower($parts['scheme'] ?? '') !== 'https' ||
+        empty($parts['host']) ||
+        empty($parts['path']) ||
+        trim($parts['path'], '/') === '' ||
+        empty($parts['query'])
+    ) {
+        return null;
+    }
+
+    return $clean;
+}
+
 function getAzureBlobSasUrl(string $type = 'packages'): string
 {
-    if (strtolower($type) === 'workshop' || strtolower($type) === 'workshops') {
-        // Priority 1: Check known workshop SAS URL environment variable names
-        $workshopKeys = [
+    $readEnv = function (string $key): string {
+        return trim((string) (getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? ''))));
+    };
+
+    $isWorkshop = (strtolower($type) === 'workshop' || strtolower($type) === 'workshops');
+
+    if ($isWorkshop) {
+        // Priority 1: Check known dedicated workshop SAS URL environment variable names
+        $workshopUrlKeys = [
             'AZURE_BLOB_CONTAINER_WORKSHOP_SAS_URL',
             'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS_URL',
             'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGES_SAS_URL',
             'AZURE_BLOB_CONTAINER_WORKSHOPS_IMAGES_SAS_URL',
             'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGE_SAS_URL',
-            'AZURE_BLOB_CONTAINER_WORKSHOPS_IMAGES',
-            'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGES',
-            'AZURE_BLOB_CONTAINER_WORKSHOPS',
-            'AZURE_BLOB_CONTAINER_WORKSHOP',
-            'AZURE_BLOB_CONTAINER_WORKSHOP_URL',
-            'AZURE_BLOB_CONTAINER_WORKSHOPS_URL',
-            'AZURE_BLOB_CONTAINER_WORKSHOP_SAS',
-            'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS',
         ];
 
-        foreach ($workshopKeys as $key) {
-            $val = trim((string) (getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? ''))));
-            if ($val !== '') {
-                return $val;
+        foreach ($workshopUrlKeys as $key) {
+            $val = $readEnv($key);
+            $normalized = normalizeAzureSasUrl($val);
+            if ($normalized !== null) {
+                return $normalized;
             }
         }
 
-        // Priority 2: Look for any environment variable starting with AZURE_BLOB_CONTAINER_WORKSH
+        // Priority 2: Check any env var starting with AZURE_BLOB_CONTAINER_WORKSH that is a valid SAS URL
         foreach ([$_SERVER, $_ENV] as $source) {
             if (is_array($source)) {
                 foreach ($source as $k => $v) {
-                    if (is_string($k) && stripos($k, 'AZURE_BLOB_CONTAINER_WORKSH') === 0 && is_string($v) && trim($v) !== '') {
-                        return trim($v);
+                    if (is_string($k) && stripos($k, 'AZURE_BLOB_CONTAINER_WORKSH') === 0 && is_string($v)) {
+                        $normalized = normalizeAzureSasUrl($v);
+                        if ($normalized !== null) {
+                            return $normalized;
+                        }
                     }
                 }
             }
         }
+
+        // Priority 3: Check if workshop URL and SAS token were provided in separate variables
+        $urlCandidateKeys = [
+            'AZURE_BLOB_CONTAINER_WORKSHOP_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGE_URL',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_IMAGE_URL',
+        ];
+        $sasCandidateKeys = [
+            'AZURE_BLOB_CONTAINER_WORKSHOP_SAS',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS',
+            'AZURE_BLOB_CONTAINER_WORKSHOP_SAS_TOKEN',
+            'AZURE_BLOB_CONTAINER_WORKSHOPS_SAS_TOKEN',
+            'AZURE_BLOB_SAS_TOKEN',
+        ];
+
+        $workshopBaseUrl = '';
+        foreach ($urlCandidateKeys as $uk) {
+            $val = $readEnv($uk);
+            if ($val !== '') {
+                $workshopBaseUrl = $val;
+                break;
+            }
+        }
+
+        $workshopSasToken = '';
+        foreach ($sasCandidateKeys as $sk) {
+            $val = $readEnv($sk);
+            if ($val !== '') {
+                $workshopSasToken = $val;
+                break;
+            }
+        }
+
+        if ($workshopBaseUrl !== '' && $workshopSasToken !== '') {
+            $combined = rtrim($workshopBaseUrl, '/') . '?' . ltrim($workshopSasToken, '?');
+            $normalized = normalizeAzureSasUrl($combined);
+            if ($normalized !== null) {
+                return $normalized;
+            }
+        }
     }
 
-    // Default package SAS URL (first URL in Azure App settings)
+    // Priority 4 (or Priority 1 for packages): Check standard Azure Blob SAS URL keys
     $packageKeys = [
         'AZURE_BLOB_CONTAINER_SAS_URL',
         'AZURE_BLOB_CONTAINER_PACKAGE_SAS_URL',
         'AZURE_BLOB_CONTAINER_PACKAGES_SAS_URL',
+        'AZURE_BLOB_SAS_URL',
     ];
 
     foreach ($packageKeys as $key) {
-        $val = trim((string) (getenv($key) ?: ($_ENV[$key] ?? ($_SERVER[$key] ?? ''))));
-        if ($val !== '') {
-            return $val;
+        $val = $readEnv($key);
+        $normalized = normalizeAzureSasUrl($val);
+        if ($normalized !== null) {
+            return $normalized;
         }
     }
 
-    return trim((string) (getenv('AZURE_BLOB_CONTAINER_SAS_URL') ?: ($_ENV['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ($_SERVER['AZURE_BLOB_CONTAINER_SAS_URL'] ?? ''))));
+    // Diagnostic fallback: inspect configured values to throw a helpful error message
+    $allCheckedKeys = $isWorkshop
+        ? array_merge(
+            $workshopUrlKeys ?? [],
+            $packageKeys,
+            ['AZURE_BLOB_CONTAINER_WORKSHOPS', 'AZURE_BLOB_CONTAINER_WORKSHOP', 'AZURE_BLOB_CONTAINER_WORKSHOP_IMAGES']
+        )
+        : $packageKeys;
+
+    foreach ($allCheckedKeys as $key) {
+        $raw = $readEnv($key);
+        if ($raw !== '') {
+            $rawClean = trim($raw, " \t\n\r\0\x0B\"'\\");
+            if (!str_contains($rawClean, '?') && (str_starts_with($rawClean, 'http') || stripos($rawClean, '.blob.core.windows.net') !== false)) {
+                throw new RuntimeException("Azure SAS URL in \${$key} is missing the SAS token query (?sp=...&sig=...). Please generate a SAS URL with Create/Write permissions in Azure.");
+            }
+            if (str_starts_with($rawClean, '?') || str_starts_with($rawClean, 'sp=') || str_starts_with($rawClean, 'sv=')) {
+                throw new RuntimeException("Azure setting \${$key} contains only a SAS token, not the full container URL. Expected: https://<account>.blob.core.windows.net/<container>?<sas_token>");
+            }
+            if (stripos($rawClean, '.blob.core.windows.net') === false) {
+                throw new RuntimeException("Azure setting \${$key} contains container name ('{$rawClean}') instead of a full SAS URL. Expected: https://<account>.blob.core.windows.net/<container>?<sas_token>");
+            }
+            throw new RuntimeException("Azure SAS URL in \${$key} is invalid. Expected format: https://<account>.blob.core.windows.net/<container>?<sas_token>");
+        }
+    }
+
+    throw new RuntimeException("Azure Blob Storage for {$type} is not configured on the server. Please set AZURE_BLOB_CONTAINER_WORKSHOP_SAS_URL or AZURE_BLOB_CONTAINER_SAS_URL in the Azure Web App configuration.");
 }
 
 function uploadBlobImageToAzure(array $file, string $folder = 'packages', string $itemTypeLabel = 'image', ?string $containerSasUrl = null): string
@@ -120,11 +241,12 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
         $containerSasUrl = getAzureBlobSasUrl($folder);
     }
 
-    $containerSasUrl = trim((string) $containerSasUrl);
-    if ($containerSasUrl === '') {
-        throw new RuntimeException("Azure Blob Storage for {$itemTypeLabel}s is not configured on the server.");
+    $normalizedSasUrl = normalizeAzureSasUrl($containerSasUrl);
+    if ($normalizedSasUrl === null) {
+        throw new RuntimeException("Azure container SAS URL configuration is invalid. Expected format: https://<account>.blob.core.windows.net/<container>?<sas_token>");
     }
 
+    $containerSasUrl = $normalizedSasUrl;
     $parts = parse_url($containerSasUrl);
     if (
         !$parts ||
@@ -133,7 +255,7 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
         empty($parts['path']) ||
         empty($parts['query'])
     ) {
-        throw new RuntimeException('Azure container SAS URL configuration is invalid.');
+        throw new RuntimeException('Azure container SAS URL configuration is invalid. Expected format: https://<account>.blob.core.windows.net/<container>?<sas_token>');
     }
 
     // Remove any trailing slash from the container path, preserve SAS query.
