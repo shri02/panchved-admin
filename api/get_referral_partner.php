@@ -77,31 +77,31 @@ if (empty($partner['partner_id'])) {
     $partner['partner_id'] = 'REF' . str_pad((string)$partner['id'], 4, '0', STR_PAD_LEFT);
 }
 
-// Fetch referred doctors if column exists
-$referred_doctors = [];
-$doc_col_check = mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
-if ($doc_col_check && mysqli_num_rows($doc_col_check) > 0 && !empty($partner['referral_code'])) {
-    $doc_stmt = mysqli_prepare($connection1, "
-        SELECT id, doctorid, full_name, phone_number, email, expertise, area, status, created_at 
-        FROM doctors 
+// Fetch referred patients if column exists
+$referred_patients = [];
+$pat_col_check = mysqli_query($connection1, "SHOW COLUMNS FROM patients LIKE 'referral_code'");
+if ($pat_col_check && mysqli_num_rows($pat_col_check) > 0 && !empty($partner['referral_code'])) {
+    $pat_stmt = mysqli_prepare($connection1, "
+        SELECT id, patient_id, full_name, phone_number, email, package_name, status, created_at 
+        FROM patients 
         WHERE referral_code = ? 
         ORDER BY id DESC
     ");
-    if ($doc_stmt) {
-        mysqli_stmt_bind_param($doc_stmt, "s", $partner['referral_code']);
-        mysqli_stmt_execute($doc_stmt);
-        $doc_res = mysqli_stmt_get_result($doc_stmt);
-        if ($doc_res) {
-            while ($doc_row = mysqli_fetch_assoc($doc_res)) {
-                $referred_doctors[] = $doc_row;
+    if ($pat_stmt) {
+        mysqli_stmt_bind_param($pat_stmt, "s", $partner['referral_code']);
+        mysqli_stmt_execute($pat_stmt);
+        $pat_res = mysqli_stmt_get_result($pat_stmt);
+        if ($pat_res) {
+            while ($pat_row = mysqli_fetch_assoc($pat_res)) {
+                $referred_patients[] = $pat_row;
             }
         }
-        mysqli_stmt_close($doc_stmt);
+        mysqli_stmt_close($pat_stmt);
     }
 }
 
-$partner['referred_count'] = count($referred_doctors);
-$partner['referred_doctors'] = $referred_doctors;
+$partner['referred_count'] = count($referred_patients);
+$partner['referred_patients'] = $referred_patients;
 
 echo json_encode([
     'status' => '1',

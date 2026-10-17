@@ -61,8 +61,35 @@ $registration_number = trim((string) ($data['registration_number'] ?? $data['reg
 $hpr_registration_number = trim((string) ($data['hpr_registration_number'] ?? $data['hprNumber'] ?? $data['hprRegNumber'] ?? ''));
 $start_time_input = trim((string) ($data['start_time'] ?? $data['startTime'] ?? '09:00'));
 $end_time_input = trim((string) ($data['end_time'] ?? $data['endTime'] ?? '17:00'));
-$referral_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? '')));
 $status = trim((string) ($data['status'] ?? 'Active'));
+
+// Auto-generate doctor referral ID in backend
+function generateDoctorReferralCode($doctor_name, $conn) {
+    $clean_name = preg_replace('/^(dr\.?|doctor)\s+/i', '', trim($doctor_name));
+    $clean_letters = strtoupper(preg_replace('/[^A-Za-z]/', '', $clean_name));
+    $prefix = strlen($clean_letters) >= 3 ? substr($clean_letters, 0, 3) : 'DOC';
+
+    for ($attempt = 0; $attempt < 20; $attempt++) {
+        $random = strtoupper(substr(bin2hex(random_bytes(3)), 0, 4));
+        $code = 'DOC-' . $prefix . $random;
+
+        $chk = mysqli_prepare($conn, "SELECT id FROM doctors WHERE referral_code = ? LIMIT 1");
+        if ($chk) {
+            mysqli_stmt_bind_param($chk, "s", $code);
+            mysqli_stmt_execute($chk);
+            mysqli_stmt_store_result($chk);
+            $exists = mysqli_stmt_num_rows($chk) > 0;
+            mysqli_stmt_close($chk);
+            if (!$exists) {
+                return $code;
+            }
+        }
+    }
+    return 'DOC-' . strtoupper(substr(uniqid(), -6));
+}
+
+$input_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? '')));
+$referral_code = ($input_code !== '') ? $input_code : generateDoctorReferralCode($full_name, $connection1);
 
 // Format Start Time and End Time
 $start_time = '09:00:00';

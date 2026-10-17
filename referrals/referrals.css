@@ -876,3 +876,123 @@
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   Referral Tabs Navigation
+   ========================================================================== */
+.referral-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  border-bottom: 2px solid var(--border-color, #ECE3D2);
+  padding-bottom: 2px;
+  overflow-x: auto;
+}
+
+.referral-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -4px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted, #8E8A76);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.referral-tab-btn .tab-icon {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  transition: stroke 0.2s ease;
+}
+
+.referral-tab-btn:hover {
+  color: var(--brand-primary, #484831);
+}
+
+.referral-tab-btn.active {
+  color: var(--brand-primary, #484831);
+  border-bottom-color: var(--brand-primary, #484831);
+  font-weight: 700;
+}
+
+.tab-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(72, 72, 49, 0.08);
+  color: var(--brand-primary, #484831);
+  transition: all 0.2s ease;
+}
+
+.referral-tab-btn.active .tab-count-badge {
+  background: var(--brand-primary, #484831);
+  color: #FFFFFF;
+}
+
+/* Social Media Platform Badges */
+.platform-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.platform-pill.instagram {
+  background: #FDF2F8;
+  color: #BE185D;
+  border: 1px solid #FBCFE8;
+}
+
+.platform-pill.facebook {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.platform-pill.youtube {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.platform-pill.linkedin {
+  background: #F0F9FF;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+
+.platform-pill.twitter, .platform-pill.x {
+  background: #F8FAFC;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+}
+
+.platform-pill.whatsapp {
+  background: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.platform-pill.other, .platform-pill.website {
+  background: #F5F5F4;
+  color: #44403C;
+  border: 1px solid #E7E5E4;
+}

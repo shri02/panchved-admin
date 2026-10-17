@@ -1142,7 +1142,6 @@ document.addEventListener('DOMContentLoaded', () => {
         area: area,
         registration_number: reg,
         hpr_registration_number: hpr,
-        referral_code: document.getElementById('addReferralCode') ? document.getElementById('addReferralCode').value.trim().toUpperCase() : '',
         status: 'Active'
       };
 

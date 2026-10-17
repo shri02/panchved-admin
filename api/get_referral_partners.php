@@ -47,9 +47,9 @@ if (!$table_check || mysqli_num_rows($table_check) === 0) {
     exit;
 }
 
-// Check if doctors table has referral_code column
-$doc_col_check = mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
-$has_doc_referral_col = ($doc_col_check && mysqli_num_rows($doc_col_check) > 0);
+// Check if patients table has referral_code column
+$pat_col_check = mysqli_query($connection1, "SHOW COLUMNS FROM patients LIKE 'referral_code'");
+$has_pat_referral_col = ($pat_col_check && mysqli_num_rows($pat_col_check) > 0);
 
 $where_clauses = [];
 $params = [];
@@ -105,8 +105,8 @@ if (!empty($params)) {
 
 $total_pages = $total_records > 0 ? (int) ceil($total_records / $limit) : 1;
 
-// Build query with doctors count
-if ($has_doc_referral_col) {
+// Build query with patients count
+if ($has_pat_referral_col) {
     $data_sql = "
         SELECT 
             rp.id,
@@ -117,9 +117,9 @@ if ($has_doc_referral_col) {
             rp.referral_code,
             rp.status,
             rp.created_at,
-            COUNT(d.id) AS referred_count
+            COUNT(p.id) AS referred_count
         FROM referral_partners rp
-        LEFT JOIN doctors d ON (d.referral_code = rp.referral_code AND rp.referral_code IS NOT NULL AND rp.referral_code != '')
+        LEFT JOIN patients p ON (p.referral_code = rp.referral_code AND rp.referral_code IS NOT NULL AND rp.referral_code != '')
         {$where_sql}
         GROUP BY rp.id
         ORDER BY rp.id DESC

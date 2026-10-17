@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS `patients` (
   `emergency_contact` VARCHAR(20) DEFAULT NULL,
   `address` TEXT DEFAULT NULL,
   `package_name` VARCHAR(150) DEFAULT 'Stress Management',
+  `referral_code` VARCHAR(50) DEFAULT NULL,
   `total_appointments` INT(11) NOT NULL DEFAULT 0,
   `status` ENUM('Ongoing', 'Completed', 'Active', 'Inactive') NOT NULL DEFAULT 'Ongoing',
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS `patients` (
   KEY `idx_patient_phone` (`phone_number`),
   KEY `idx_patient_name` (`full_name`),
   KEY `idx_patient_package` (`package_name`),
+  KEY `idx_patient_referral_code` (`referral_code`),
   KEY `idx_patient_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -269,5 +271,33 @@ INSERT INTO `referral_partners` (`id`, `partner_id`, `name`, `phone_number`, `em
 (2, 'REF0002', 'Kavita Joshi', '9822233344', 'kavita.j@gmail.com', 'REF-KAVITA2', 'Active'),
 (3, 'REF0003', 'Sunil Deshmukh', '9833344455', 'sunil.d@gmail.com', 'REF-SUNIL3', 'Active')
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `referral_code` = VALUES(`referral_code`);
+
+
+-- ----------------------------------------------------------------------------
+-- Table: social_media_referrals
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `social_media_referrals` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `campaign_id` VARCHAR(50) DEFAULT NULL,
+  `platform` VARCHAR(100) NOT NULL,
+  `campaign_name` VARCHAR(150) NOT NULL,
+  `referral_code` VARCHAR(50) NOT NULL,
+  `target_url` VARCHAR(255) DEFAULT NULL,
+  `notes` TEXT DEFAULT NULL,
+  `status` ENUM('Active', 'Inactive') NOT NULL DEFAULT 'Active',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_sm_code` (`referral_code`),
+  KEY `idx_sm_platform` (`platform`),
+  KEY `idx_sm_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Sample Seed Data for Social Media Referrals
+INSERT INTO `social_media_referrals` (`id`, `campaign_id`, `platform`, `campaign_name`, `referral_code`, `target_url`, `status`) VALUES
+(1, 'SOC0001', 'Instagram', 'Instagram Summer Wellness Reel', 'SOC-INSTA-SUMMER', 'https://instagram.com/reel/example', 'Active'),
+(2, 'SOC0002', 'YouTube', 'Ayurveda Dinacharya Routine Video', 'SOC-YT-DINA24', 'https://youtube.com/watch?v=example', 'Active'),
+(3, 'SOC0003', 'Facebook', 'Holistic Health Community Ad', 'SOC-FB-COMM01', 'https://facebook.com/ocayur', 'Active')
+ON DUPLICATE KEY UPDATE `campaign_name` = VALUES(`campaign_name`);
 
 COMMIT;
