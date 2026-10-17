@@ -644,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <!-- View Doctor Details -->
               <button type="button" class="dropdown-item view-doc-btn" role="menuitem">
                 <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z"></path>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
                 <span>View details</span>
