@@ -91,6 +91,17 @@ $new_password = (string) ($data['new_password'] ?? '');
 $confirm_password = (string) ($data['confirm_password'] ?? '');
 
 // 3. Validation
+if ($full_name !== '') {
+    if (preg_match('/[0-9]/', $full_name)) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Full name cannot contain numbers.'
+        ]);
+        exit;
+    }
+}
+
 if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode([
@@ -98,6 +109,25 @@ if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         'message' => 'Please provide a valid email address.'
     ]);
     exit;
+}
+
+if ($phone_number !== '') {
+    if (preg_match('/[^0-9]/', $phone_number)) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Phone number must contain only numbers.'
+        ]);
+        exit;
+    }
+    if (strlen($phone_number) !== 10) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => '0',
+            'message' => 'Phone number must be exactly 10 digits.'
+        ]);
+        exit;
+    }
 }
 
 // Check email uniqueness if email changed

@@ -256,6 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!fullName) {
         showError(fullNameInput, fullNameError, 'Please enter your full name');
         isValid = false;
+      } else if (/[0-9]/.test(fullName)) {
+        showError(fullNameInput, fullNameError, 'Full name should not contain numbers');
+        isValid = false;
+      } else if (!/^[a-zA-Z\s'.-]+$/.test(fullName)) {
+        showError(fullNameInput, fullNameError, 'Full name should only contain letters');
+        isValid = false;
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -265,6 +271,16 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (!emailRegex.test(email)) {
         showError(emailInput, emailError, 'Please enter a valid email address');
         isValid = false;
+      }
+
+      if (phone) {
+        if (/[^0-9]/.test(phone)) {
+          showError(phoneInput, phoneError, 'Phone number must contain only numbers');
+          isValid = false;
+        } else if (phone.length !== 10) {
+          showError(phoneInput, phoneError, 'Phone number must be exactly 10 digits');
+          isValid = false;
+        }
       }
 
       if (!isValid) return;
@@ -440,10 +456,68 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Clear errors on field typing
+  // 7. Input Restrictions & Clear Errors
+  // Restrict numbers in Full Name field (no digits accepted)
   if (fullNameInput) {
-    fullNameInput.addEventListener('input', () => clearFieldError(fullNameInput, fullNameError));
+    fullNameInput.addEventListener('keydown', (e) => {
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+      }
+    });
+    fullNameInput.addEventListener('input', () => {
+      const clean = fullNameInput.value.replace(/[0-9]/g, '');
+      if (fullNameInput.value !== clean) {
+        fullNameInput.value = clean;
+      }
+      clearFieldError(fullNameInput, fullNameError);
+    });
+    fullNameInput.addEventListener('paste', (e) => {
+      const pasted = (e.clipboardData || window.clipboardData)?.getData('text');
+      if (pasted && /[0-9]/.test(pasted)) {
+        e.preventDefault();
+        const clean = pasted.replace(/[0-9]/g, '');
+        const start = fullNameInput.selectionStart || 0;
+        const end = fullNameInput.selectionEnd || 0;
+        const current = fullNameInput.value;
+        fullNameInput.value = current.slice(0, start) + clean + current.slice(end);
+        clearFieldError(fullNameInput, fullNameError);
+      }
+    });
   }
+
+  // Restrict Phone Number field (digits only, max 10 digits - no text accepted)
+  if (phoneInput) {
+    phoneInput.addEventListener('keydown', (e) => {
+      const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+      if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+      if (e.key < '0' || e.key > '9') {
+        e.preventDefault();
+      }
+    });
+    phoneInput.addEventListener('input', () => {
+      const clean = phoneInput.value.replace(/\D/g, '').slice(0, 10);
+      if (phoneInput.value !== clean) {
+        phoneInput.value = clean;
+      }
+      clearFieldError(phoneInput, phoneError);
+    });
+    phoneInput.addEventListener('paste', (e) => {
+      const pasted = (e.clipboardData || window.clipboardData)?.getData('text');
+      if (pasted) {
+        e.preventDefault();
+        const clean = pasted.replace(/\D/g, '').slice(0, 10);
+        const start = phoneInput.selectionStart || 0;
+        const end = phoneInput.selectionEnd || 0;
+        const current = phoneInput.value;
+        const combined = (current.slice(0, start) + clean + current.slice(end)).replace(/\D/g, '').slice(0, 10);
+        phoneInput.value = combined;
+        clearFieldError(phoneInput, phoneError);
+      }
+    });
+  }
+
   if (emailInput) {
     emailInput.addEventListener('input', () => clearFieldError(emailInput, emailError));
   }

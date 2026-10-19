@@ -265,6 +265,8 @@
                     name="fullName" 
                     class="input-field" 
                     placeholder="Enter your full name" 
+                    pattern="[A-Za-z\s'.-]+" 
+                    title="Full name should contain only letters"
                     required 
                     autocomplete="name"
                   >
@@ -310,7 +312,10 @@
                     name="phoneNumber" 
                     class="input-field" 
                     placeholder="9876543210" 
-                    maxlength="15" 
+                    maxlength="10" 
+                    inputmode="numeric" 
+                    pattern="[0-9]{10}" 
+                    title="Phone number must be exactly 10 digits" 
                     autocomplete="tel"
                   >
                 </div>
