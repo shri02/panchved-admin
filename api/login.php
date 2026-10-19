@@ -83,13 +83,13 @@ if ($user) {
     }
 
     if ($auth_success) {
-        // Enforce strict Admin-only role check
+        // Enforce strict Admin-only role check without leaking user role
         $userRole = strtolower(trim((string)($user['role'] ?? '')));
         if ($userRole !== 'admin' && $userRole !== 'super admin' && $userRole !== 'administrator') {
-            http_response_code(403);
+            http_response_code(401);
             echo json_encode([
                 'status' => '0',
-                'message' => 'Access denied. ' . ucfirst($user['role'] ?? 'Non-admin') . ' credentials cannot be used to log in to the Admin portal.'
+                'message' => 'Invalid credentials. Please check your credentials.'
             ]);
             exit;
         }
@@ -107,42 +107,6 @@ if ($user) {
             'status' => 'Active'
         ];
         $auth_success = true;
-    } else if ($connection1) {
-        // Check if a doctor or patient is attempting to log into the admin portal
-        $phone_lookup = $clean_phone ?: $login_id;
-        $docCheck = mysqli_prepare($connection1, "SELECT id FROM doctors WHERE phone_number = ? OR email = ? OR doctorid = ? LIMIT 1");
-        if ($docCheck) {
-            mysqli_stmt_bind_param($docCheck, 'sss', $phone_lookup, $login_id, $login_id);
-            mysqli_stmt_execute($docCheck);
-            $dRes = mysqli_stmt_get_result($docCheck);
-            if ($dRes && mysqli_fetch_assoc($dRes)) {
-                mysqli_stmt_close($docCheck);
-                http_response_code(403);
-                echo json_encode([
-                    'status' => '0',
-                    'message' => 'Access denied. Doctor credentials cannot be used to log in to the Admin portal.'
-                ]);
-                exit;
-            }
-            mysqli_stmt_close($docCheck);
-        }
-
-        $patCheck = mysqli_prepare($connection1, "SELECT id FROM patients WHERE phone_number = ? OR email = ? OR patient_id = ? LIMIT 1");
-        if ($patCheck) {
-            mysqli_stmt_bind_param($patCheck, 'sss', $phone_lookup, $login_id, $login_id);
-            mysqli_stmt_execute($patCheck);
-            $pRes = mysqli_stmt_get_result($patCheck);
-            if ($pRes && mysqli_fetch_assoc($pRes)) {
-                mysqli_stmt_close($patCheck);
-                http_response_code(403);
-                echo json_encode([
-                    'status' => '0',
-                    'message' => 'Access denied. Patient credentials cannot be used to log in to the Admin portal.'
-                ]);
-                exit;
-            }
-            mysqli_stmt_close($patCheck);
-        }
     }
 }
 
@@ -150,7 +114,7 @@ if (!$auth_success || !$user) {
     http_response_code(401);
     echo json_encode([
         'status' => '0',
-        'message' => 'Invalid phone number or password. Please try again.'
+        'message' => 'Invalid credentials. Please check your credentials.'
     ]);
     exit;
 }
@@ -158,10 +122,10 @@ if (!$auth_success || !$user) {
 // Final safety validation on role
 $finalRole = strtolower(trim((string)($user['role'] ?? '')));
 if ($finalRole !== 'admin' && $finalRole !== 'super admin' && $finalRole !== 'administrator') {
-    http_response_code(403);
+    http_response_code(401);
     echo json_encode([
         'status' => '0',
-        'message' => 'Access denied. Only Admin credentials are permitted on the Admin portal.'
+        'message' => 'Invalid credentials. Please check your credentials.'
     ]);
     exit;
 }
