@@ -48,7 +48,7 @@ if (!$table_check || mysqli_num_rows($table_check) === 0) {
 
 $name = trim((string) ($data['name'] ?? $data['fullName'] ?? ''));
 $phone_number = trim((string) ($data['phone_number'] ?? $data['phone'] ?? ''));
-$email = trim((string) ($data['email'] ?? ''));
+$email = strtolower(trim((string) ($data['email'] ?? '')));
 $referral_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? '')));
 $status = trim((string) ($data['status'] ?? 'Active'));
 

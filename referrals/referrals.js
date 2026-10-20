@@ -756,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('editPartnerId').value = p.id;
         document.getElementById('editPartnerName').value = p.name || '';
         document.getElementById('editPartnerPhone').value = p.phone_number || '';
-        document.getElementById('editPartnerEmail').value = p.email || '';
+        document.getElementById('editPartnerEmail').value = (p.email || '').toLowerCase();
         document.getElementById('editPartnerCode').value = p.referral_code || '';
         document.getElementById('editPartnerStatus').value = p.status || 'Active';
 
@@ -770,6 +770,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
+  // Lowercase enforcement for Email fields (No capital letters accepted)
+  // ==========================================================================
+  ['addPartnerEmail', 'editPartnerEmail'].forEach((id) => {
+    const inputEl = document.getElementById(id);
+    if (inputEl) {
+      inputEl.addEventListener('input', function () {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const lower = this.value.toLowerCase();
+        if (this.value !== lower) {
+          this.value = lower;
+          if (start !== null && end !== null) {
+            this.setSelectionRange(start, end);
+          }
+        }
+      });
+    }
+  });
+
+  // ==========================================================================
   // Form Submission: Add Partner
   // ==========================================================================
   if (addPartnerForm) {
@@ -778,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const name = document.getElementById('addPartnerName').value.trim();
       const phone = document.getElementById('addPartnerPhone').value.trim();
-      const email = document.getElementById('addPartnerEmail').value.trim();
+      const email = document.getElementById('addPartnerEmail').value.trim().toLowerCase();
       const code = document.getElementById('addPartnerCode').value.trim().toUpperCase();
       const status = document.getElementById('addPartnerStatus').value;
 
@@ -835,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = document.getElementById('editPartnerId').value;
       const name = document.getElementById('editPartnerName').value.trim();
       const phone = document.getElementById('editPartnerPhone').value.trim();
-      const email = document.getElementById('editPartnerEmail').value.trim();
+      const email = document.getElementById('editPartnerEmail').value.trim().toLowerCase();
       const code = document.getElementById('editPartnerCode').value.trim().toUpperCase();
       const status = document.getElementById('editPartnerStatus').value;
 

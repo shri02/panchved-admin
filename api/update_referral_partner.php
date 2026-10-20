@@ -63,7 +63,7 @@ if (!$existing_partner) {
 
 $name = trim((string) ($data['name'] ?? $existing_partner['name']));
 $phone_number = trim((string) ($data['phone_number'] ?? $data['phone'] ?? $existing_partner['phone_number']));
-$email = trim((string) ($data['email'] ?? $existing_partner['email']));
+$email = strtolower(trim((string) ($data['email'] ?? $existing_partner['email'])));
 $referral_code = strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? $existing_partner['referral_code'])));
 $status = trim((string) ($data['status'] ?? $existing_partner['status']));
 
