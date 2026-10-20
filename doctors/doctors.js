@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalDocReg = document.getElementById('modalDocReg');
   const modalDocHpr = document.getElementById('modalDocHpr');
   const modalDocAppointments = document.getElementById('modalDocAppointments');
+  const modalDocAbout = document.getElementById('modalDocAbout');
 
   // Filter Drawer Elements
   const docFilterDrawer = document.getElementById('docFilterDrawer');
@@ -590,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-reg', doc.registration_number || '-');
       row.setAttribute('data-hpr', doc.hpr_registration_number || '-');
       row.setAttribute('data-referral-code', doc.referral_code || '');
+      row.setAttribute('data-about', doc.about || '');
       row.setAttribute('data-status', status);
 
       row.innerHTML = `
@@ -871,6 +873,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const refEl = document.getElementById('editReferralCode');
       if (refEl) refEl.value = row.getAttribute('data-referral-code') || '';
 
+      const aboutEl = document.getElementById('editAbout');
+      if (aboutEl) aboutEl.value = row.getAttribute('data-about') || '';
+
       showView(editDoctorView);
 
       // Fetch fresh doctor details from API
@@ -916,6 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (regEl) regEl.value = d.registration_number || '';
           if (hprEl) hprEl.value = d.hpr_registration_number || '';
           if (refEl) refEl.value = d.referral_code || '';
+          if (aboutEl) aboutEl.value = d.about || '';
         }
       } catch (err) {
         console.warn('Could not fetch fresh single doctor data:', err);
@@ -953,6 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const modalDocReferral = document.getElementById('modalDocReferral');
       if (modalDocReferral) modalDocReferral.textContent = row.getAttribute('data-referral-code') || 'None (Direct)';
       if (modalDocAppointments) modalDocAppointments.textContent = '-';
+      if (modalDocAbout) modalDocAbout.textContent = row.getAttribute('data-about') || '-';
 
       openDocModal();
 
@@ -984,6 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (modalDocHpr) modalDocHpr.textContent = d.hpr_registration_number || '-';
           if (modalDocReferral) modalDocReferral.textContent = d.referral_code || 'None (Direct)';
           if (modalDocAppointments) modalDocAppointments.textContent = String(d.total_appointments ?? 0);
+          if (modalDocAbout) modalDocAbout.textContent = d.about || '-';
         }
       } catch (err) {
         console.warn('Error fetching single doctor details:', err);
@@ -1029,6 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const area = document.getElementById('addArea').value.trim();
       const reg = document.getElementById('addReg').value.trim();
       const hpr = document.getElementById('addHpr').value.trim();
+      const about = document.getElementById('addAbout') ? document.getElementById('addAbout').value.trim() : '';
 
       if (!fullName) {
         showToast('Please enter doctor full name.', 'error');
@@ -1142,6 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         area: area,
         registration_number: reg,
         hpr_registration_number: hpr,
+        about: about,
         status: 'Active'
       };
 
@@ -1195,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const area = document.getElementById('editArea').value.trim();
       const reg = document.getElementById('editReg').value.trim();
       const hpr = document.getElementById('editHpr').value.trim();
+      const about = document.getElementById('editAbout') ? document.getElementById('editAbout').value.trim() : '';
 
       if (!fullName) {
         showToast('Please enter doctor full name.', 'error');
@@ -1311,6 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         area: area,
         registration_number: reg,
         hpr_registration_number: hpr,
+        about: about,
         referral_code: document.getElementById('editReferralCode') ? document.getElementById('editReferralCode').value.trim().toUpperCase() : ''
       };
 

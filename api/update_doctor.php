@@ -91,6 +91,7 @@ $expertise = trim((string) ($data['expertise'] ?? $existing_doctor['expertise'])
 $area = trim((string) ($data['area'] ?? $existing_doctor['area']));
 $registration_number = trim((string) ($data['registration_number'] ?? $data['registrationNumber'] ?? $data['regNumber'] ?? $existing_doctor['registration_number']));
 $hpr_registration_number = trim((string) ($data['hpr_registration_number'] ?? $data['hprNumber'] ?? $data['hprRegNumber'] ?? $existing_doctor['hpr_registration_number']));
+$about = isset($data['about']) ? trim((string)$data['about']) : (string)($existing_doctor['about'] ?? '');
 $referral_code = !empty($existing_doctor['referral_code']) ? $existing_doctor['referral_code'] : strtoupper(trim((string) ($data['referral_code'] ?? $data['referralCode'] ?? '')));
 $start_time_input = trim((string) ($data['start_time'] ?? $data['startTime'] ?? ($existing_doctor['start_time'] ?? '09:00:00')));
 $end_time_input = trim((string) ($data['end_time'] ?? $data['endTime'] ?? ($existing_doctor['end_time'] ?? '17:00:00')));
@@ -262,112 +263,75 @@ if ($hpr_registration_number === '') {
    EXECUTE UPDATE
 ========================================= */
 
-// Check if referral_code column exists
+// Check if referral_code and about columns exist
 $has_ref_col = false;
 $ref_col_res = @mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'referral_code'");
 if ($ref_col_res && mysqli_num_rows($ref_col_res) > 0) {
     $has_ref_col = true;
 }
 
-if ($has_ref_col) {
-    $update_sql = "
-        UPDATE doctors SET
-            full_name = ?,
-            date_of_birth = ?,
-            phone_number = ?,
-            gender = ?,
-            email = ?,
-            years_of_experience = ?,
-            expertise = ?,
-            area = ?,
-            registration_number = ?,
-            hpr_registration_number = ?,
-            referral_code = ?,
-            start_time = ?,
-            end_time = ?,
-            status = ?
-        WHERE id = ?
-    ";
-
-    $up_stmt = mysqli_prepare($connection1, $update_sql);
-    if (!$up_stmt) {
-        echo json_encode([
-            'status' => '0',
-            'message' => 'SQL prepare failed.',
-            'error' => mysqli_error($connection1)
-        ]);
-        exit;
-    }
-
-    $ref_val = ($referral_code !== '') ? $referral_code : null;
-
-    mysqli_stmt_bind_param(
-        $up_stmt,
-        "sssssissssssssi",
-        $full_name,
-        $formatted_dob,
-        $phone_number,
-        $gender,
-        $email,
-        $years_of_experience,
-        $expertise,
-        $area,
-        $registration_number,
-        $hpr_registration_number,
-        $ref_val,
-        $start_time,
-        $end_time,
-        $status,
-        $id
-    );
-} else {
-    $update_sql = "
-        UPDATE doctors SET
-            full_name = ?,
-            date_of_birth = ?,
-            phone_number = ?,
-            gender = ?,
-            email = ?,
-            years_of_experience = ?,
-            expertise = ?,
-            area = ?,
-            registration_number = ?,
-            hpr_registration_number = ?,
-            start_time = ?,
-            end_time = ?,
-            status = ?
-        WHERE id = ?
-    ";
-
-    $up_stmt = mysqli_prepare($connection1, $update_sql);
-    if (!$up_stmt) {
-        echo json_encode([
-            'status' => '0',
-            'message' => 'SQL prepare failed.',
-            'error' => mysqli_error($connection1)
-        ]);
-        exit;
-    }
-
-    mysqli_stmt_bind_param(
-        $up_stmt,
-        "sssssisssssssi",
-        $full_name,
-        $formatted_dob,
-        $phone_number,
-        $gender,
-        $email,
-        $years_of_experience,
-        $expertise,
-        $area,
-        $registration_number,
-        $hpr_registration_number,
-        $start_time,
-        $end_time,
-        $status,
-        $id
-    );
+$has_about_col = false;
+$about_col_res = @mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'about'");
+if ($about_col_res && mysqli_num_rows($about_col_res) > 0) {
+    $has_about_col = true;
 }
+
+$set_clauses = [
+    'full_name = ?',
+    'date_of_birth = ?',
+    'phone_number = ?',
+    'gender = ?',
+    'email = ?',
+    'years_of_experience = ?',
+    'expertise = ?',
+    'area = ?',
+    'registration_number = ?',
+    'hpr_registration_number = ?'
+];
+$types = "sssssissss";
+$bind_values = [$full_name, $formatted_dob, $phone_number, $gender, $email, $years_of_experience, $expertise, $area, $registration_number, $hpr_registration_number];
+
+if ($has_about_col) {
+    $set_clauses[] = 'about = ?';
+    $types .= 's';
+    $bind_values[] = ($about !== '') ? $about : null;
+}
+
+if ($has_ref_col) {
+    $set_clauses[] = 'referral_code = ?';
+    $types .= 's';
+    $ref_val = ($referral_code !== '') ? $referral_code : null;
+    $bind_values[] = $ref_val;
+}
+
+$set_clauses[] = 'start_time = ?';
+$types .= 's';
+$bind_values[] = $start_time;
+
+$set_clauses[] = 'end_time = ?';
+$types .= 's';
+$bind_values[] = $end_time;
+
+$set_clauses[] = 'status = ?';
+$types .= 's';
+$bind_values[] = $status;
+
+$types .= 'i';
+$bind_values[] = $id;
+
+$update_sql = "UPDATE doctors SET " . implode(', ', $set_clauses) . " WHERE id = ?";
+
+$up_stmt = mysqli_prepare($connection1, $update_sql);
+if (!$up_stmt) {
+    echo json_encode([
+        'status' => '0',
+        'message' => 'SQL prepare failed.',
+        'error' => mysqli_error($connection1)
+    ]);
+    exit;
+}
+
+mysqli_stmt_bind_param($up_stmt, $types, ...$bind_values);
 
 if (mysqli_stmt_execute($up_stmt)) {
     mysqli_stmt_close($up_stmt);
@@ -389,6 +353,7 @@ if (mysqli_stmt_execute($up_stmt)) {
             'area' => $area,
             'registration_number' => $registration_number,
             'hpr_registration_number' => $hpr_registration_number,
+            'about' => $about,
             'referral_code' => $referral_code,
             'start_time' => $start_time,
             'end_time' => $end_time,

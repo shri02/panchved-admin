@@ -160,6 +160,37 @@ $data_sql = "
     LIMIT ?, ?
 ";
 
+// If about column exists, include it
+$has_about_col = false;
+$about_chk = @mysqli_query($connection1, "SHOW COLUMNS FROM doctors LIKE 'about'");
+if ($about_chk && mysqli_num_rows($about_chk) > 0) {
+    $has_about_col = true;
+    $data_sql = "
+        SELECT 
+            id,
+            doctorid,
+            full_name,
+            date_of_birth,
+            phone_number,
+            gender,
+            email,
+            years_of_experience,
+            expertise,
+            area,
+            registration_number,
+            hpr_registration_number,
+            about,
+            start_time,
+            end_time,
+            status,
+            created_at
+        FROM doctors
+        " . $where_sql . "
+        ORDER BY id DESC
+        LIMIT ?, ?
+    ";
+}
+
 $data_stmt = mysqli_prepare($connection1, $data_sql);
 
 if (!$data_stmt) {
@@ -192,6 +223,7 @@ if ($data_result) {
         $doc['years_of_experience'] = (int) $doc['years_of_experience'];
         $doc['start_time'] = !empty($doc['start_time']) ? $doc['start_time'] : '09:00:00';
         $doc['end_time'] = !empty($doc['end_time']) ? $doc['end_time'] : '17:00:00';
+        $doc['about'] = $doc['about'] ?? '';
         $doc['referral_code'] = $doc['referral_code'] ?? '';
         $doctors[] = $doc;
     }

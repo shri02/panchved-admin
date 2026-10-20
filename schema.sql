@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `doctors` (
   `area` VARCHAR(150) NOT NULL,
   `registration_number` VARCHAR(100) NOT NULL,
   `hpr_registration_number` VARCHAR(100) DEFAULT NULL,
+  `about` TEXT DEFAULT NULL,
   `referral_code` VARCHAR(50) DEFAULT NULL,
   `start_time` TIME DEFAULT '09:00:00',
   `end_time` TIME DEFAULT '17:00:00',
@@ -71,13 +72,13 @@ CREATE TABLE IF NOT EXISTS `doctors` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Sample Seed Data for Doctors
-INSERT INTO `doctors` (`id`, `doctorid`, `full_name`, `date_of_birth`, `phone_number`, `gender`, `email`, `years_of_experience`, `expertise`, `area`, `registration_number`, `hpr_registration_number`, `start_time`, `end_time`, `status`) VALUES
-(1, 'DOC000001', 'Dr. Nidhi Jha', '1986-06-15', '9876543210', 'Female', 'drnidhi@gmail.com', 12, 'Ayurveda Physician', 'Pediatrics & Gynecology', 'AYU1234', 'HPR1234', '09:00:00', '17:00:00', 'Active'),
-(2, 'DOC000002', 'Dr. Rohit Mehra', '1988-04-20', '9823456789', 'Male', 'rohitmehra@gmail.com', 10, 'Physiotherapist', 'Orthopedic & Sports Rehab', 'PHY5678', 'HPR5678', '10:00:00', '18:00:00', 'Active'),
-(3, 'DOC000003', 'Dr. Priya Patel', '1990-11-12', '9811223344', 'Female', 'priyapatel@gmail.com', 8, 'Panchakarma Specialist', 'Detox & Rejuvenation', 'AYU9012', 'HPR9012', '08:30:00', '16:30:00', 'Active'),
-(4, 'DOC000004', 'Dr. Ankit Verma', '1982-02-28', '9833445566', 'Male', 'ankitverma@gmail.com', 16, 'Ayurvedic Consultant', 'Chronic Disease Management', 'AYU3456', 'HPR3456', '09:00:00', '17:00:00', 'Active'),
-(5, 'DOC000005', 'Dr. Sneha Kulkarni', '1992-09-05', '9877889900', 'Female', 'snehak@gmail.com', 6, 'Neuro-Physiotherapist', 'Neurological Rehab', 'PHY7890', 'HPR7890', '11:00:00', '19:00:00', 'Inactive')
-ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`), `expertise` = VALUES(`expertise`);
+INSERT INTO `doctors` (`id`, `doctorid`, `full_name`, `date_of_birth`, `phone_number`, `gender`, `email`, `years_of_experience`, `expertise`, `area`, `registration_number`, `hpr_registration_number`, `about`, `start_time`, `end_time`, `status`) VALUES
+(1, 'DOC000001', 'Dr. Nidhi Jha', '1986-06-15', '9876543210', 'Female', 'drnidhi@gmail.com', 12, 'Ayurveda Physician', 'Pediatrics & Gynecology', 'AYU1234', 'HPR1234', 'Senior Ayurveda Physician with over 12 years of clinical expertise specializing in Kaumarbhritya (Pediatrics) and Prasuti Tantra (Gynecology). Dedicated to holistic women and child wellness.', '09:00:00', '17:00:00', 'Active'),
+(2, 'DOC000002', 'Dr. Rohit Mehra', '1988-04-20', '9823456789', 'Male', 'rohitmehra@gmail.com', 10, 'Physiotherapist', 'Orthopedic & Sports Rehab', 'PHY5678', 'HPR5678', 'Consultant physiotherapist specializing in musculoskeletal rehabilitation, sports injuries, and posture correction therapies.', '10:00:00', '18:00:00', 'Active'),
+(3, 'DOC000003', 'Dr. Priya Patel', '1990-11-12', '9811223344', 'Female', 'priyapatel@gmail.com', 8, 'Panchakarma Specialist', 'Detox & Rejuvenation', 'AYU9012', 'HPR9012', 'Specialist in authentic Panchakarma purification therapies, stress management protocols, and lifestyle wellness.', '08:30:00', '16:30:00', 'Active'),
+(4, 'DOC000004', 'Dr. Ankit Verma', '1982-02-28', '9833445566', 'Male', 'ankitverma@gmail.com', 16, 'Ayurvedic Consultant', 'Chronic Disease Management', 'AYU3456', 'HPR3456', 'Senior consultant with 16+ years experience focusing on chronic metabolic disorders, arthritis, and lifestyle disease management.', '09:00:00', '17:00:00', 'Active'),
+(5, 'DOC000005', 'Dr. Sneha Kulkarni', '1992-09-05', '9877889900', 'Female', 'snehak@gmail.com', 6, 'Neuro-Physiotherapist', 'Neurological Rehab', 'PHY7890', 'HPR7890', 'Specialized in neurological rehabilitation, mobility enhancement, and neuromuscular pain management.', '11:00:00', '19:00:00', 'Inactive')
+ON DUPLICATE KEY UPDATE `full_name` = VALUES(`full_name`), `expertise` = VALUES(`expertise`), `about` = VALUES(`about`);
 
 
 -- ----------------------------------------------------------------------------

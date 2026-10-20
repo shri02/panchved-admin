@@ -256,6 +256,18 @@
   box-shadow: 0 0 0 3px var(--primary-teal-focus-ring);
 }
 
+.form-field-full {
+  grid-column: 1 / -1;
+}
+
+textarea.form-textarea-input {
+  height: auto;
+  min-height: 80px;
+  padding: 12px 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 /* Date & Time Inputs & Picker Icons */
 .form-card input[type="date"].form-text-input,
 .form-card input[type="time"].form-text-input,
