@@ -78,6 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 4. Fetch Dashboard Statistics
   async function fetchDashboardData(year = currentYear, filter = currentFilter) {
+    const statCards = [statTotalPatients, statTotalDoctors, statTotalPackages, statTotalWorkshops];
+    statCards.forEach(el => {
+      if (el) {
+        el.innerHTML = `
+          <svg style="animation: pageLoaderSpin 0.9s linear infinite; width: 20px; height: 20px; vertical-align: middle; color: var(--brand-accent);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+          </svg>
+        `;
+      }
+    });
+
     try {
       const response = await fetch(`${API_BASE}/get_dashboard_stats.php?year=${year}&filter=${encodeURIComponent(filter)}`, {
         method: 'GET',
@@ -97,11 +109,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (d.chart_data && Array.isArray(d.chart_data)) {
           renderDynamicChart(d.chart_data);
         }
+      } else {
+        statCards.forEach(el => { if (el) el.textContent = '0'; });
       }
     } catch (err) {
       console.warn('Could not fetch dashboard stats from API:', err);
+      statCards.forEach(el => { if (el) el.textContent = '0'; });
     }
   }
+
 
   // 5. Dynamic SVG Chart Renderer
   function renderDynamicChart(chartData) {

@@ -492,4 +492,133 @@
       window.showSnackbar('This feature will be available soon');
     }
   });
+
+  // ==========================================================================
+  // Global Page Preloader Controller & API
+  // ==========================================================================
+  window.PageLoader = {
+    element: null,
+    minDisplayTimeMs: 450,
+    startTime: Date.now(),
+
+    getGlyphSvg: function () {
+      return `
+        <svg class="loader-center-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C6.5 2 2 6.5 2 12c0 3.5 1.8 6.6 4.6 8.4"></path>
+          <path d="M12 22c5.5 0 10-4.5 10-10 0-3.5-1.8-6.6-4.6-8.4"></path>
+          <circle cx="12" cy="12" r="3.2" fill="currentColor" fill-opacity="0.15"></circle>
+          <path d="M12 7v2"></path>
+          <path d="M12 15v2"></path>
+          <path d="M7 12H5"></path>
+          <path d="M19 12h-2"></path>
+        </svg>
+      `;
+    },
+
+    create: function (message) {
+      let loader = document.getElementById('globalPageLoader');
+      if (loader) return loader;
+
+      loader = document.createElement('div');
+      loader.id = 'globalPageLoader';
+      loader.className = 'global-page-loader';
+      loader.setAttribute('role', 'status');
+      loader.setAttribute('aria-live', 'polite');
+      loader.setAttribute('aria-label', message || 'Loading page content');
+
+      loader.innerHTML = `
+        <div class="loader-inner-container">
+          <div class="loader-brand-wrapper">
+            <div class="loader-ring-spinner"></div>
+            ${this.getGlyphSvg()}
+          </div>
+          <div class="loader-brand-title">Ocayur</div>
+          <div class="loader-sub-text" id="globalLoaderText">${message || 'Loading experience...'}</div>
+        </div>
+      `;
+
+      return loader;
+    },
+
+    show: function (message) {
+      let loader = document.getElementById('globalPageLoader');
+      if (!loader) {
+        loader = this.create(message);
+        if (document.body) {
+          document.body.appendChild(loader);
+        } else if (document.documentElement) {
+          document.documentElement.appendChild(loader);
+        }
+      }
+      this.element = loader;
+      this.startTime = Date.now();
+
+      const textEl = loader.querySelector('#globalLoaderText');
+      if (textEl && message) {
+        textEl.textContent = message;
+      }
+
+      loader.classList.remove('loaded');
+      loader.style.display = 'flex';
+    },
+
+    hide: function () {
+      const loader = this.element || document.getElementById('globalPageLoader');
+      if (!loader) return;
+
+      const elapsed = Date.now() - (this.startTime || 0);
+      const remainingTime = Math.max(0, this.minDisplayTimeMs - elapsed);
+
+      setTimeout(() => {
+        loader.classList.add('loaded');
+        setTimeout(() => {
+          if (loader.classList.contains('loaded')) {
+            loader.style.display = 'none';
+          }
+        }, 400);
+      }, remainingTime);
+    },
+
+    setText: function (message) {
+      const loader = this.element || document.getElementById('globalPageLoader');
+      if (loader) {
+        const textEl = loader.querySelector('#globalLoaderText');
+        if (textEl) textEl.textContent = message;
+      }
+    }
+  };
+
+  // Insert loader directly into the page as early as DOM is parsed
+  const initPageLoader = () => {
+    let loader = document.getElementById('globalPageLoader');
+    if (!loader && document.body) {
+      loader = window.PageLoader.create('Loading experience...');
+      document.body.prepend(loader);
+      window.PageLoader.element = loader;
+    }
+  };
+
+  if (document.body) {
+    initPageLoader();
+  } else {
+    document.addEventListener('DOMContentLoaded', initPageLoader);
+  }
+
+  // Dismiss loader on window load (or DOMContentLoaded fallback with safety timer)
+  const dismissLoaderWhenReady = () => {
+    window.PageLoader.hide();
+  };
+
+  if (document.readyState === 'complete') {
+    window.PageLoader.hide();
+  } else {
+    window.addEventListener('load', dismissLoaderWhenReady);
+    document.addEventListener('DOMContentLoaded', () => {
+      // Small timeout to ensure DOM layout settles nicely
+      setTimeout(dismissLoaderWhenReady, 350);
+    });
+    // Safety fallback so the loader never hangs under slow networks or stuck assets
+    setTimeout(dismissLoaderWhenReady, 2500);
+  }
 })();
+
