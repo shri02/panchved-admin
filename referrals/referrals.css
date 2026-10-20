@@ -971,6 +971,13 @@
   border-bottom: 2px solid var(--border-color, #ece3d2);
   padding-bottom: 2px;
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.referral-tabs-nav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .referral-tab-btn {
