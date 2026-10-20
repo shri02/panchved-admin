@@ -152,11 +152,15 @@ if ($connection1 && $email !== '' && (!$existing_user || strtolower($existing_us
 
 $new_password_hash = null;
 if ($new_password !== '') {
-    if (strlen($new_password) < 6) {
+    $hasLetter = preg_match('/[a-zA-Z]/', $new_password);
+    $hasNumber = preg_match('/[0-9]/', $new_password);
+    $hasSpecial = preg_match('/[^a-zA-Z0-9]/', $new_password);
+
+    if (strlen($new_password) < 8 || !$hasLetter || !$hasNumber || !$hasSpecial) {
         http_response_code(400);
         echo json_encode([
             'status' => '0',
-            'message' => 'New password must be at least 6 characters in length.'
+            'message' => 'The password should contain special characters, numbers, and alphabets, and it must be at least 8 digits long.'
         ]);
         exit;
     }

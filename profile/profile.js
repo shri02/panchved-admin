@@ -207,20 +207,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let score = 0;
-      if (val.length >= 6) score += 1;
-      if (val.length >= 10) score += 1;
-      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score += 1;
-      if (/[0-9]/.test(val)) score += 1;
-      if (/[^A-Za-z0-9]/.test(val)) score += 1;
+      const hasLetter = /[a-zA-Z]/.test(val);
+      const hasNumber = /[0-9]/.test(val);
+      const hasSpecial = /[^A-Za-z0-9]/.test(val);
 
-      if (val.length < 6) {
+      let score = 0;
+      if (val.length >= 8) score += 1;
+      if (val.length >= 12) score += 1;
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score += 1;
+      if (hasNumber) score += 1;
+      if (hasSpecial) score += 1;
+
+      if (val.length < 8) {
         strengthBarFill.style.width = '25%';
         strengthBarFill.style.backgroundColor = '#ef4444';
         strengthLabel.textContent = 'Too short';
         strengthLabel.style.color = '#ef4444';
-      } else if (score <= 2) {
-        strengthBarFill.style.width = '45%';
+      } else if (!hasLetter || !hasNumber || !hasSpecial) {
+        strengthBarFill.style.width = '50%';
         strengthBarFill.style.backgroundColor = '#f59e0b';
         strengthLabel.textContent = 'Weak';
         strengthLabel.style.color = '#f59e0b';
@@ -374,11 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isValid = false;
       }
 
+      const hasLetter = /[a-zA-Z]/.test(newPassword);
+      const hasNumber = /[0-9]/.test(newPassword);
+      const hasSpecial = /[^a-zA-Z0-9]/.test(newPassword);
+
       if (!newPassword) {
         showError(newPasswordInput, newPasswordError, 'Please enter a new password');
         isValid = false;
-      } else if (newPassword.length < 6) {
-        showError(newPasswordInput, newPasswordError, 'New password must be at least 6 characters');
+      } else if (newPassword.length < 8 || !hasLetter || !hasNumber || !hasSpecial) {
+        showError(newPasswordInput, newPasswordError, 'The password should contain special characters, numbers, and alphabets, and it must be at least 8 digits long.');
         isValid = false;
       }
 
