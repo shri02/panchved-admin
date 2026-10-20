@@ -560,16 +560,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderEmptyState(customMessage = null) {
     if (!partnersTableBody) return;
-    const msg = customMessage || `No ${currentTab === 'partners' ? 'referral partners' : currentTab === 'doctors' ? 'doctors' : 'social media referrals'} found.`;
+
+    let defaultMsg;
+    if (currentSearchQuery) {
+      const tabLabel = currentTab === 'partners' ? 'referral partners' : currentTab === 'doctors' ? 'doctors' : 'social media referrals';
+      defaultMsg = `No ${tabLabel} matching "${currentSearchQuery}".`;
+    } else if (currentStatusFilter && currentStatusFilter !== 'all') {
+      const tabLabel = currentTab === 'partners' ? 'referral partners' : currentTab === 'doctors' ? 'doctors' : 'social media referrals';
+      defaultMsg = `No ${currentStatusFilter.toLowerCase()} ${tabLabel} found.`;
+    } else {
+      defaultMsg = `No ${currentTab === 'partners' ? 'referral partners' : currentTab === 'doctors' ? 'doctors' : 'social media referrals'} found.`;
+    }
+    const msg = customMessage || defaultMsg;
+
+    let iconSvg = '';
+    if (currentSearchQuery) {
+      iconSvg = `
+        <svg class="empty-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 28px; height: 28px;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      `;
+    } else if (currentTab === 'partners') {
+      iconSvg = `
+        <svg class="empty-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 28px; height: 28px;">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+      `;
+    } else if (currentTab === 'doctors') {
+      iconSvg = `
+        <svg class="empty-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 28px; height: 28px;">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
+      `;
+    } else {
+      iconSvg = `
+        <svg class="empty-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width: 28px; height: 28px;">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+      `;
+    }
+
     partnersTableBody.innerHTML = `
-      <tr>
+      <tr class="empty-state-row">
         <td colspan="7">
           <div class="table-empty-state">
-            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <line x1="23" y1="11" x2="17" y2="11"></line>
-            </svg>
+            <div class="empty-icon-wrap">
+              ${iconSvg}
+            </div>
             <h4 class="empty-title">No Records Found</h4>
             <p class="empty-desc">${msg}</p>
           </div>
