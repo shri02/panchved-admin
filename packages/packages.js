@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
               <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
             </svg>
-            <span>Loading packages...</span>
+            <span>Loading programmes...</span>
           </div>
           <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
         </td>
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = await response.json().catch(() => ({}));
 
       if (!response.ok || result.status !== '1') {
-        throw new Error(result.message || 'Failed to fetch packages.');
+        throw new Error(result.message || 'Failed to fetch programmes.');
       }
 
       // Update Top Stats
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       packagesTableBody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 36px; color: #ef4444;">
-            <p style="margin-bottom: 8px; font-weight: 600;">${err.message || 'Error loading packages.'}</p>
+            <p style="margin-bottom: 8px; font-weight: 600;">${err.message || 'Error loading programmes.'}</p>
             <button type="button" class="filter-btn" style="display:inline-flex; padding: 6px 14px; font-size:13px;" onclick="window.retryFetchPackages()">
               Retry
             </button>
@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
       packagesTableBody.innerHTML = `
         <tr>
           <td colspan="7" style="text-align: center; padding: 48px; color: #94a3b8; font-size: 15px;">
-            No packages found matching your search.
+            No programmes found matching your search.
           </td>
         </tr>
       `;
@@ -800,14 +800,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const result = await response.json();
         if (result.status === '1') {
-          showToast(`Package status updated to ${result.new_status || targetStatus}`);
+          showToast(`Programme status updated to ${result.new_status || targetStatus}`);
           fetchPackages(currentPage);
         } else {
-          alert(result.message || 'Failed to update package status.');
+          alert(result.message || 'Failed to update programme status.');
         }
       } catch (err) {
         console.error(err);
-        showToast(`Package status updated to ${targetStatus}`);
+        showToast(`Programme status updated to ${targetStatus}`);
         fetchPackages(currentPage);
       }
     }
@@ -842,25 +842,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Mandatory field validations
       if (!pkgName) {
-        showToast('Please enter package name.', 'error');
+        showToast('Please enter programme name.', 'error');
         document.getElementById('addPkgName')?.focus();
         return;
       }
 
       if (/[0-9]/.test(pkgName)) {
-        showToast('Package name should not contain numbers.', 'error');
+        showToast('Programme name should not contain numbers.', 'error');
         document.getElementById('addPkgName')?.focus();
         return;
       }
 
       if (!category) {
-        showToast('Please enter package category.', 'error');
+        showToast('Please enter programme category.', 'error');
         document.getElementById('addPkgCategory')?.focus();
         return;
       }
 
       if (/[0-9]/.test(category)) {
-        showToast('Package category should not contain numbers.', 'error');
+        showToast('Programme category should not contain numbers.', 'error');
         document.getElementById('addPkgCategory')?.focus();
         return;
       }
@@ -872,19 +872,19 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!price) {
-        showToast('Please enter package price.', 'error');
+        showToast('Please enter programme price.', 'error');
         document.getElementById('addPkgPrice')?.focus();
         return;
       }
 
       if (!/^\d+(\.\d{1,2})?$/.test(price)) {
-        showToast('Please enter a valid package price.', 'error');
+        showToast('Please enter a valid programme price.', 'error');
         document.getElementById('addPkgPrice')?.focus();
         return;
       }
 
       if (!duration) {
-        showToast('Please select package duration.', 'error');
+        showToast('Please select programme duration.', 'error');
         document.getElementById('addPkgDuration')?.focus();
         return;
       }
@@ -896,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!overview) {
-        showToast('Please enter package overview.', 'error');
+        showToast('Please enter programme overview.', 'error');
         document.getElementById('addPkgOverview')?.focus();
         return;
       }
@@ -951,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Image validation
       if (!imageFile) {
-        showToast('Please select a package image.', 'error');
+        showToast('Please select a programme image.', 'error');
         imageInput?.focus();
         return;
       }
@@ -1030,10 +1030,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await response.json().catch(() => ({}));
 
         if (!response.ok || res.status !== '1') {
-          throw new Error(res.message || 'Failed to add package.');
+          throw new Error(res.message || 'Failed to add programme.');
         }
 
-        showToast('Package created successfully!');
+        showToast('Programme created successfully!');
 
         addPackageForm.reset();
 
@@ -1047,12 +1047,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } catch (err) {
         console.error('Add package error:', err);
-        showToast(err.message || 'Failed to add package.', 'error');
+        showToast(err.message || 'Failed to add programme.', 'error');
 
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Add Package</span>';
+          submitBtn.innerHTML = '<span>Add Programme</span>';
         }
       }
     });
@@ -1220,22 +1220,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Mandatory validation checks for all sections
       if (!pkgName) {
-        showToast('Please enter package name.', 'error');
+        showToast('Please enter programme name.', 'error');
         document.getElementById('editPkgName')?.focus();
         return;
       }
       if (/[0-9]/.test(pkgName)) {
-        showToast('Package name should not contain numbers.', 'error');
+        showToast('Programme name should not contain numbers.', 'error');
         document.getElementById('editPkgName')?.focus();
         return;
       }
       if (!category) {
-        showToast('Please enter package category.', 'error');
+        showToast('Please enter programme category.', 'error');
         document.getElementById('editPkgCategory')?.focus();
         return;
       }
       if (/[0-9]/.test(category)) {
-        showToast('Package category should not contain numbers.', 'error');
+        showToast('Programme category should not contain numbers.', 'error');
         document.getElementById('editPkgCategory')?.focus();
         return;
       }
@@ -1245,17 +1245,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (!price) {
-        showToast('Please enter package price.', 'error');
+        showToast('Please enter programme price.', 'error');
         document.getElementById('editPkgPrice')?.focus();
         return;
       }
       if (/[^0-9]/.test(price)) {
-        showToast('Package price must contain only numbers.', 'error');
+        showToast('Programme price must contain only numbers.', 'error');
         document.getElementById('editPkgPrice')?.focus();
         return;
       }
       if (!duration) {
-        showToast('Please select package duration.', 'error');
+        showToast('Please select programme duration.', 'error');
         document.getElementById('editPkgDuration')?.focus();
         return;
       }
@@ -1265,7 +1265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (!overview) {
-        showToast('Please enter package overview.', 'error');
+        showToast('Please enter programme overview.', 'error');
         document.getElementById('editPkgOverview')?.focus();
         return;
       }
@@ -1355,19 +1355,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const res = await response.json().catch(() => ({}));
         if (res.status === '1') {
-          showToast('Package updated successfully!');
+          showToast('Programme updated successfully!');
           switchView(packagesListView);
           await fetchPackages(currentPage);
         } else {
-          showToast(res.message || 'Failed to update package.', 'error');
+          showToast(res.message || 'Failed to update programme.', 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast(err.message || 'Failed to update package.', 'error');
+        showToast(err.message || 'Failed to update programme.', 'error');
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Save Package</span>';
+          submitBtn.innerHTML = '<span>Save Programme</span>';
         }
       }
     });

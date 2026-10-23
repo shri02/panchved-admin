@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Packages - Ocayur Ayurveda Lifestyle</title>
+  <title>Programmes - Ocayur Ayurveda Lifestyle</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="../assets/favicon.png">
@@ -117,7 +117,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              <span>Package</span>
+              <span>Programmes</span>
             </a>
           </li>
 
@@ -169,8 +169,8 @@
         <!-- Content Header -->
         <header class="content-header">
           <div class="header-titles">
-            <h1 class="page-title">Packages</h1>
-            <p class="welcome-text">Create, manage, and assign wellness packages and doctor protocols.</p>
+            <h1 class="page-title">Programmes</h1>
+            <p class="welcome-text">Create, manage, and assign wellness programmes and doctor protocols.</p>
           </div>
 
           <!-- User Profile Badge -->
@@ -188,12 +188,12 @@
         </header>
 
         <!-- Stats Grid (Row of 3 Cards matching Screen 1) -->
-        <section class="package-stats-grid" aria-label="Package Statistics">
+        <section class="package-stats-grid" aria-label="Programme Statistics">
           
           <!-- Total Packages Card -->
           <div class="stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Total Packages</span>
+              <span class="stat-title">Total Programmes</span>
               <div class="stat-icon-wrapper">
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -209,7 +209,7 @@
           <!-- Active Packages Card -->
           <div class="stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Active Packages</span>
+              <span class="stat-title">Active Programmes</span>
               <div class="stat-icon-wrapper">
                 <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -241,7 +241,7 @@
         </section>
 
         <!-- Search Toolbar with "Add New Package" Button -->
-        <section class="toolbar-section packages-toolbar" aria-label="Search and Add Package">
+        <section class="toolbar-section packages-toolbar" aria-label="Search and Add Programme">
           <div class="search-box-wrapper">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
@@ -251,26 +251,26 @@
               type="text" 
               id="packageSearchInput" 
               class="search-input" 
-              placeholder="Search package name...." 
-              aria-label="Search package name"
+              placeholder="Search programme name...." 
+              aria-label="Search programme name"
             />
             <button type="button" class="clear-search-btn" id="clearPackageSearchBtn" aria-label="Clear search">×</button>
           </div>
 
           <div class="toolbar-actions-group">
             <button type="button" class="btn-primary-teal add-new-pkg-btn" id="openAddPackageBtn">
-              <span>Add New Package</span>
+              <span>Add New Programme</span>
             </button>
           </div>
         </section>
 
         <!-- Packages Table Card -->
-        <section class="table-card" aria-label="Packages Table">
+        <section class="table-card" aria-label="Programmes Table">
           <div class="table-responsive">
             <table class="patients-table packages-table" id="packagesTable">
               <thead>
                 <tr>
-                  <th scope="col" class="th-pkg-name">Package Name</th>
+                  <th scope="col" class="th-pkg-name">Programme Name</th>
                   <th scope="col" class="th-duration">Duration</th>
                   <th scope="col" class="th-price">Price</th>
                   <th scope="col" class="th-enrollments">Enrollments</th>
@@ -313,8 +313,8 @@
         <!-- Header with Back Button -->
         <header class="content-header form-view-header">
           <div class="header-titles">
-            <h1 class="page-title">Add Package</h1>
-            <p class="welcome-text">Create, manage, and assign wellness packages and doctor protocols.</p>
+            <h1 class="page-title">Add Programme</h1>
+            <p class="welcome-text">Create, manage, and assign wellness programmes and doctor protocols.</p>
           </div>
 
           <a href="../profile/profile.html" class="user-profile-badge" aria-label="User Profile" title="View & Edit Profile">
@@ -344,16 +344,16 @@
           
           <!-- Section 1: Package Information -->
           <div class="form-section-card">
-            <h2 class="form-section-title">Package Information</h2>
+            <h2 class="form-section-title">Programme Information</h2>
             
             <div class="form-grid-2col">
               <div class="form-group">
-                <label for="addPkgName" class="form-label">Package Name <span class="required-star">*</span></label>
-                <input type="text" id="addPkgName" class="form-control-input" placeholder="Enter Package name" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
+                <label for="addPkgName" class="form-label">Programme Name <span class="required-star">*</span></label>
+                <input type="text" id="addPkgName" class="form-control-input" placeholder="Enter Programme name" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
               </div>
 
               <div class="form-group">
-                <label for="addPkgCategory" class="form-label">Package Category <span class="required-star">*</span></label>
+                <label for="addPkgCategory" class="form-label">Programme Category <span class="required-star">*</span></label>
                 <input type="text" id="addPkgCategory" class="form-control-input" placeholder="Select category" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
               </div>
 
@@ -431,10 +431,11 @@
 
           <!-- Section 2: Package Details -->
           <div class="form-section-card">
-            <h2 class="form-section-title">Package Details</h2>
+            <h2 class="form-section-title">Programme Details</h2>
             
-            <div class="form-group full-width-field">
-              <label for="addPkgOverview" class="form-label">Package Overview <span class="required-star">*</span></label>
+            <div class="form-grid-2col">
+              <div class="form-group full-width-field">
+                <label for="addPkgOverview" class="form-label">Programme Overview <span class="required-star">*</span></label>
               <textarea id="addPkgOverview" class="form-control-textarea" rows="2" placeholder="Enter text" required></textarea>
             </div>
 
@@ -487,7 +488,7 @@
           <!-- Submit Button Row -->
           <div class="form-action-row">
             <button type="submit" class="btn-primary-teal form-submit-btn">
-              <span>Add Package</span>
+              <span>Add Programme</span>
             </button>
           </div>
 
@@ -503,8 +504,8 @@
         <!-- Header with Back Button -->
         <header class="content-header form-view-header">
           <div class="header-titles">
-            <h1 class="page-title">Edit Package</h1>
-            <p class="welcome-text">Create, manage, and assign wellness packages and doctor protocols.</p>
+            <h1 class="page-title">Edit Programme</h1>
+            <p class="welcome-text">Create, manage, and assign wellness programmes and doctor protocols.</p>
           </div>
 
           <a href="../profile/profile.html" class="user-profile-badge" aria-label="User Profile" title="View & Edit Profile">
@@ -534,17 +535,17 @@
           
           <!-- Section 1: Package Information -->
           <div class="form-section-card">
-            <h2 class="form-section-title">Package Information</h2>
+            <h2 class="form-section-title">Programme Information</h2>
             
             <div class="form-grid-2col">
               <div class="form-group">
-                <label for="editPkgName" class="form-label">Package Name <span class="required-star">*</span></label>
-                <input type="text" id="editPkgName" class="form-control-input" placeholder="Enter package name" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
+                <label for="editPkgName" class="form-label">Programme Name <span class="required-star">*</span></label>
+                <input type="text" id="editPkgName" class="form-control-input" placeholder="Enter programme name" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
               </div>
 
               <div class="form-group">
-                <label for="editPkgCategory" class="form-label">Package Category <span class="required-star">*</span></label>
-                <input type="text" id="editPkgCategory" class="form-control-input" placeholder="Enter package category" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
+                <label for="editPkgCategory" class="form-label">Programme Category <span class="required-star">*</span></label>
+                <input type="text" id="editPkgCategory" class="form-control-input" placeholder="Enter programme category" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
               </div>
 
               <div class="form-group">
@@ -615,11 +616,11 @@
 
           <!-- Section 2: Package Details -->
           <div class="form-section-card">
-            <h2 class="form-section-title">Package Details</h2>
+            <h2 class="form-section-title">Programme Details</h2>
             
             <div class="form-group full-width-field">
-              <label for="editPkgOverview" class="form-label">Package Overview <span class="required-star">*</span></label>
-              <textarea id="editPkgOverview" class="form-control-textarea" rows="2" placeholder="Enter package overview" required></textarea>
+              <label for="editPkgOverview" class="form-label">Programme Overview <span class="required-star">*</span></label>
+              <textarea id="editPkgOverview" class="form-control-textarea" rows="2" placeholder="Enter programme overview" required></textarea>
             </div>
 
             <div class="form-group full-width-field">
@@ -703,7 +704,7 @@
         </div>
         <div class="modal-header-text">
           <h2 id="viewPackageTitle" class="modal-title">View</h2>
-          <p class="modal-subtitle">Package Information &amp; Clinical Protocols</p>
+          <p class="modal-subtitle">Programme Information &amp; Clinical Protocols</p>
         </div>
       </header>
 
@@ -711,12 +712,12 @@
       <div class="modal-body pkg-modal-body">
         
         <!-- Tabs Navigation Bar -->
-        <div class="pkg-tabs-nav" role="tablist" aria-label="Package Details Navigation">
+        <div class="pkg-tabs-nav" role="tablist" aria-label="Programme Details Navigation">
           <button type="button" class="pkg-tab-btn active" role="tab" id="tabBtnInfo" data-tab="tabContentInfo" aria-selected="true" aria-controls="tabContentInfo">
-            Package Information
+            Programme Information
           </button>
           <button type="button" class="pkg-tab-btn" role="tab" id="tabBtnDetails" data-tab="tabContentDetails" aria-selected="false" aria-controls="tabContentDetails">
-            Package Details
+            Programme Details
           </button>
           <button type="button" class="pkg-tab-btn" role="tab" id="tabBtnProtocol" data-tab="tabContentProtocol" aria-selected="false" aria-controls="tabContentProtocol">
             Protocol Details
@@ -726,8 +727,8 @@
         <!-- Tab 1: Package Information Content -->
         <div class="pkg-tab-pane active" id="tabContentInfo" role="tabpanel" aria-labelledby="tabBtnInfo">
           <div class="details-grid">
-            <div class="detail-row"><span class="detail-key">Package Name:</span><span class="detail-val" id="viewModalPkgName">-</span></div>
-            <div class="detail-row"><span class="detail-key">Package Category:</span><span class="detail-val" id="viewModalPkgCategory">-</span></div>
+            <div class="detail-row"><span class="detail-key">Programme Name:</span><span class="detail-val" id="viewModalPkgName">-</span></div>
+            <div class="detail-row"><span class="detail-key">Programme Category:</span><span class="detail-val" id="viewModalPkgCategory">-</span></div>
             <div class="detail-row"><span class="detail-key">Assigned Doctor:</span><span class="detail-val" id="viewModalPkgDoctor">-</span></div>
             <div class="detail-row"><span class="detail-key">Price:</span><span class="detail-val" id="viewModalPkgPrice">-</span></div>
             <div class="detail-row"><span class="detail-key">Duration:</span><span class="detail-val" id="viewModalPkgDuration">-</span></div>
@@ -735,7 +736,7 @@
             <div class="detail-row detail-row-image">
               <span class="detail-key">Image:</span>
               <div class="detail-val pkg-thumb-wrapper">
-                <img src="../assets/package-thumb.jpg" alt="Package Thumbnail" id="viewModalPkgImage" class="pkg-preview-thumb">
+                <img src="../assets/package-thumb.jpg" alt="Programme Thumbnail" id="viewModalPkgImage" class="pkg-preview-thumb">
               </div>
             </div>
           </div>
@@ -744,7 +745,7 @@
         <!-- Tab 2: Package Details Content -->
         <div class="pkg-tab-pane" id="tabContentDetails" role="tabpanel" aria-labelledby="tabBtnDetails">
           <div class="details-grid">
-            <div class="detail-row"><span class="detail-key">Package Overview:</span><span class="detail-val text-long" id="viewModalPkgOverview">-</span></div>
+            <div class="detail-row"><span class="detail-key">Programme Overview:</span><span class="detail-val text-long" id="viewModalPkgOverview">-</span></div>
             <div class="detail-row"><span class="detail-key">Key Benefits:</span><span class="detail-val text-long" id="viewModalPkgBenefits">-</span></div>
             <div class="detail-row"><span class="detail-key">What's Included:</span><span class="detail-val text-long" id="viewModalPkgIncluded">-</span></div>
           </div>

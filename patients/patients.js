@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (packageAccordionContent && Array.isArray(filterOptions.packages)) {
       packageAccordionContent.innerHTML = '';
       if (filterOptions.packages.length === 0) {
-        packageAccordionContent.innerHTML = '<div style="padding: 8px 12px; color: #94a3b8; font-size: 13px;">No packages available</div>';
+        packageAccordionContent.innerHTML = '<div style="padding: 8px 12px; color: #94a3b8; font-size: 13px;">No programmes available</div>';
       } else {
         filterOptions.packages.forEach((pkg) => {
           const isChecked = selectedPackages.includes(pkg);
