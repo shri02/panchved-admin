@@ -590,21 +590,78 @@
               placeholder="Enter or assign speaker name" pattern="[^0-9]*" oninput="this.value = this.value.replace(/[0-9]/g, '')" required>
           </div>
 
-          <div class="form-group full-width-field">
-            <label class="form-label">Upload Image <span class="required-star">*</span></label>
-            <div class="dropzone-box" id="editWsDropzoneBox">
-              <input type="file" id="editWsImageInput" class="dropzone-file-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
-              <div class="dropzone-icon-wrap">
-                <svg class="dropzone-icon" viewBox="0 0 24 24" fill="currentColor">
-                  <path
-                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+          <div class="form-group full-width-field edit-image-management-group">
+            <label class="form-label">Workshop Image</label>
+
+            <!-- Image Action Choices: Keep Existing or Replace -->
+            <div class="image-choice-toggle-container">
+              <label class="image-choice-pill active" id="editWsKeepPill">
+                <input type="radio" name="editWsImageAction" value="keep" id="editWsRadioKeep" checked>
+                <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-              </div>
-              <p class="dropzone-main-text">Drag your file(s) to start uploading</p>
-              <div class="dropzone-divider"><span>OR</span></div>
-              <button type="button" class="btn-browse-file" id="editWsBrowseBtn">Browse files</button>
-              <span class="dropzone-selected-filename" id="editWsFileName"></span>
+                <span>Keep Current Image</span>
+              </label>
+              <label class="image-choice-pill" id="editWsReplacePill">
+                <input type="radio" name="editWsImageAction" value="replace" id="editWsRadioReplace">
+                <svg class="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>Replace Image</span>
+              </label>
             </div>
+
+            <!-- Current / Previous Image Display Box -->
+            <div class="current-image-preview-card" id="editWsCurrentCard">
+              <div class="current-image-thumb-wrapper">
+                <img src="../assets/package-thumb.jpg" alt="Current Workshop Image" id="editWsCurrentThumb" class="current-image-thumb">
+              </div>
+              <div class="current-image-info">
+                <div class="current-image-badge-row">
+                  <span class="badge-active-image">Current Active Image</span>
+                </div>
+                <p class="current-image-title" id="editWsCurrentTitle">Saved workshop image</p>
+                <p class="current-image-desc">This image will remain unchanged if you choose to keep it.</p>
+              </div>
+              <button type="button" class="btn-change-image-action" id="editWsTriggerReplaceBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Replace</span>
+              </button>
+            </div>
+
+            <!-- New Image Upload Dropzone (shown when user chooses Replace) -->
+            <div class="edit-upload-box-wrapper" id="editWsUploadWrapper" style="display: none;">
+              <div class="dropzone-box" id="editWsDropzoneBox">
+                <input type="file" id="editWsImageInput" class="dropzone-file-input" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp">
+                <div class="dropzone-icon-wrap">
+                  <svg class="dropzone-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                  </svg>
+                </div>
+                <p class="dropzone-main-text">Drag new image here to replace</p>
+                <div class="dropzone-divider"><span>OR</span></div>
+                <button type="button" class="btn-browse-file" id="editWsBrowseBtn">Browse new file</button>
+              </div>
+
+              <!-- Live preview of newly chosen file -->
+              <div class="new-selected-image-card" id="editWsNewPreviewCard" style="display: none;">
+                <img src="" alt="New Selected Preview" id="editWsNewThumb" class="new-preview-thumb">
+                <div class="new-preview-info">
+                  <span class="badge-new-image">New Image Selected</span>
+                  <span class="new-filename" id="editWsFileName">filename.jpg</span>
+                </div>
+                <button type="button" class="btn-remove-new-image" id="editWsCancelNewBtn" title="Revert to current image">
+                  <span>Revert to Current</span>
+                </button>
+              </div>
+            </div>
+
           </div>
 
           <!-- Bottom Action Row -->

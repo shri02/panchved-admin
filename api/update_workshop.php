@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/azure_blob_upload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -63,6 +64,28 @@ $fee_raw = isset($data['fee']) ? preg_replace('/[^\d.]/', '', (string) $data['fe
 $about = trim((string) ($data['about'] ?? ''));
 $status = trim((string) ($data['status'] ?? ''));
 
+// Handle Workshop Image Upload to Azure Blob Storage if provided
+$image_url = null;
+$wsImageFile = $_FILES['workshop-images']
+    ?? $_FILES['workshop_image']
+    ?? $_FILES['workshop_images']
+    ?? $_FILES['workshop-image']
+    ?? $_FILES['image']
+    ?? null;
+
+if ($wsImageFile && ($wsImageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+    try {
+        $image_url = uploadWorkshopImageToAzure($wsImageFile);
+    } catch (Throwable $e) {
+        error_log('update_workshop.php image upload error: ' . $e->getMessage());
+        http_response_code(400);
+        echo json_encode(['status' => '0', 'message' => $e->getMessage()]);
+        exit;
+    }
+} elseif (isset($data['image_url']) && trim((string)$data['image_url']) !== '') {
+    $image_url = trim((string)$data['image_url']);
+}
+
 // Check / Ensure columns exist in workshops table
 $existing_columns = [];
 if ($connection1) {
@@ -84,6 +107,10 @@ if ($connection1) {
         if (!in_array('meet_link', $existing_columns)) {
             @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `meet_link` VARCHAR(255) NULL AFTER `assign_speaker`");
             $existing_columns[] = 'meet_link';
+        }
+        if (!in_array('image_url', $existing_columns)) {
+            @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `image_url` VARCHAR(255) NULL AFTER `about`");
+            $existing_columns[] = 'image_url';
         }
     }
 }
@@ -136,6 +163,9 @@ if ($about !== '') { $update_fields[] = "about = ?"; $params[] = $about; $types 
 if ($status !== '' && in_array($status, ['Upcoming', 'Completed', 'Cancelled', 'Active', 'Past'], true)) {
     $update_fields[] = "status = ?"; $params[] = $status; $types .= 's';
 }
+if ($image_url !== null && $image_url !== '') {
+    $update_fields[] = "image_url = ?"; $params[] = $image_url; $types .= 's';
+}
 
 if (empty($update_fields)) {
     echo json_encode(['status' => '1', 'message' => 'No fields to update.']);
@@ -168,9 +198,18 @@ mysqli_stmt_bind_param($stmt, $types, ...$params);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
-    echo json_encode(['status' => '1', 'message' => 'Workshop updated successfully.']);
+    echo json_encode([
+        'status' => '1',
+        'message' => 'Workshop updated successfully.',
+        'data' => [
+            'id' => $id,
+            'workshop_id' => $workshop_id,
+            'image_url' => $image_url
+        ]
+    ]);
 } else {
     $err = mysqli_stmt_error($stmt);
     mysqli_stmt_close($stmt);
-    echo json_encode(['status' => '1', 'message' => 'Workshop updated successfully.']);
+    http_response_code(500);
+    echo json_encode(['status' => '0', 'message' => 'Failed to update workshop.', 'error' => $err]);
 }

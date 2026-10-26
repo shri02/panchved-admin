@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/azure_blob_upload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -80,14 +81,33 @@ $patient_monitoring = trim((string) ($data['patient_monitoring'] ?? ''));
 $followup_review = trim((string) ($data['followup_review'] ?? ''));
 $status = trim((string) ($data['status'] ?? ''));
 
+// Handle Package Image Upload to Azure Blob Storage if provided
+$image_url = null;
+if (isset($_FILES['package_image']) && ($_FILES['package_image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+    try {
+        $image_url = uploadPackageImageToAzure($_FILES['package_image']);
+    } catch (Throwable $e) {
+        error_log('update_package.php image upload error: ' . $e->getMessage());
+        http_response_code(400);
+        echo json_encode(['status' => '0', 'message' => $e->getMessage()]);
+        exit;
+    }
+} elseif (isset($data['image_url']) && trim((string)$data['image_url']) !== '') {
+    $image_url = trim((string)$data['image_url']);
+}
+
 // Ensure assigned_doctor and assigned_doctor_2 columns exist
-if ($connection1 && ($assigned_doctor_1 !== null || $assigned_doctor_2 !== null)) {
+if ($connection1 && ($assigned_doctor_1 !== null || $assigned_doctor_2 !== null || $image_url !== null)) {
     $col_res = @mysqli_query($connection1, "SHOW COLUMNS FROM packages");
     $existing_cols = [];
     if ($col_res) {
         while ($col_row = mysqli_fetch_assoc($col_res)) {
             $existing_cols[] = $col_row['Field'];
         }
+    }
+    if ($image_url !== null && !in_array('image_url', $existing_cols, true)) {
+        @mysqli_query($connection1, "ALTER TABLE packages ADD COLUMN `image_url` VARCHAR(255) NULL AFTER `category`");
+        $existing_cols[] = 'image_url';
     }
     if (!in_array('assigned_doctor', $existing_cols) && !in_array('assign_doctor', $existing_cols)) {
         @mysqli_query($connection1, "ALTER TABLE packages ADD COLUMN `assigned_doctor` VARCHAR(150) NULL DEFAULT NULL AFTER `category`");
@@ -162,6 +182,9 @@ if ($followup_review !== '') { $update_fields[] = "followup_review = ?"; $params
 if ($status !== '' && in_array($status, ['Active', 'Inactive'], true)) {
     $update_fields[] = "status = ?"; $params[] = $status; $types .= 's';
 }
+if ($image_url !== null && $image_url !== '') {
+    $update_fields[] = "image_url = ?"; $params[] = $image_url; $types .= 's';
+}
 
 if (empty($update_fields)) {
     echo json_encode(['status' => '1', 'message' => 'No fields to update.']);
@@ -209,7 +232,8 @@ if (mysqli_stmt_execute($stmt)) {
             'assign_doctor' => $assigned_doctor_1,
             'assign_doctor_1' => $assigned_doctor_1,
             'assign_doctor_2' => $assigned_doctor_2,
-            'combined_doctor' => $combined_doctor
+            'combined_doctor' => $combined_doctor,
+            'image_url' => $image_url
         ]
     ]);
 } else {

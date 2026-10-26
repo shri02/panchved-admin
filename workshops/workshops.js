@@ -580,6 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-registrations', String(registrations));
       row.setAttribute('data-fee', String(feeNum));
       row.setAttribute('data-status', status);
+      row.setAttribute('data-image', ws.image_url || '');
       row.setAttribute('data-about', ws.about || '');
       row.setAttribute('data-speaker', ws.speaker || ws.instructor || '');
 
@@ -1025,6 +1026,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setVal('editWsFee', formatFeeValue(feeVal));
         setVal('editWsAbout', currentTargetRow.getAttribute('data-about') || '');
 
+        // Populate previous / current image preview
+        currentWorkshopImageUrl = currentTargetRow.getAttribute('data-image') || '';
+        if (editWsCurrentThumb) {
+          editWsCurrentThumb.src = currentWorkshopImageUrl || '../assets/package-thumb.jpg';
+        }
+        if (editWsCurrentTitle) {
+          editWsCurrentTitle.textContent = currentWorkshopImageUrl ? (currentWorkshopImageUrl.split('/').pop() || 'Current workshop image') : 'Default image (assets/package-thumb.jpg)';
+        }
+        setEditWorkshopImageMode('keep');
+
         switchView(editWorkshopView);
 
         // Fetch fresh details from API
@@ -1042,6 +1053,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const json = await res.json();
             if (json.status === '1' && json.data) {
               const d = json.data;
+              if (d.image_url) {
+                currentWorkshopImageUrl = d.image_url;
+                currentTargetRow.setAttribute('data-image', d.image_url);
+                if (editWsCurrentThumb) {
+                  editWsCurrentThumb.src = d.image_url;
+                }
+                if (editWsCurrentTitle) {
+                  editWsCurrentTitle.textContent = d.image_url.split('/').pop() || 'Current workshop image';
+                }
+              }
               setVal('editWsName', d.title || '');
               setVal('editWsSubtitle', d.subtitle || d.workshop_subtitle || '');
               setVal('editWsAssignSpeaker', d.assign_speaker || d.assigned_speaker || d.speaker || d.instructor || '');
@@ -1144,38 +1165,59 @@ document.addEventListener('DOMContentLoaded', () => {
       const id = currentTargetRow.getAttribute('data-id');
       const wsId = currentTargetRow.getAttribute('data-workshop-id');
 
-      const payload = {
-        id: Number(id),
-        workshop_id: wsId,
-        title: title,
-        subtitle: subtitle,
-        workshop_subtitle: subtitle,
-        speaker: speaker,
-        instructor: assignSpeaker || speaker,
-        assign_speaker: assignSpeaker,
-        assigned_speaker: assignSpeaker,
-        meet_link: meetLink,
-        meetLink: meetLink,
-        date: convertToDbDate(date),
-        time: time,
-        attendee_type: attendeeType,
-        fee: fee,
-        about: about
-      };
+      const isReplacing = editWsRadioReplace && editWsRadioReplace.checked;
+      const newImageFile = isReplacing ? editWsImageInput?.files?.[0] : null;
+
+      if (isReplacing && !newImageFile) {
+        showToast('Please select a new image file or choose "Keep Current Image".', 'error');
+        editWsImageInput?.focus();
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Save Workshop</span>';
+        }
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('id', String(id));
+      formData.append('workshop_id', wsId);
+      formData.append('title', title);
+      formData.append('subtitle', subtitle);
+      formData.append('workshop_subtitle', subtitle);
+      formData.append('speaker', speaker);
+      formData.append('instructor', assignSpeaker || speaker);
+      formData.append('assign_speaker', assignSpeaker);
+      formData.append('assigned_speaker', assignSpeaker);
+      formData.append('meet_link', meetLink);
+      formData.append('meetLink', meetLink);
+      formData.append('date', convertToDbDate(date));
+      formData.append('time', time);
+      formData.append('attendee_type', attendeeType);
+      formData.append('fee', fee);
+      formData.append('about', about);
+
+      if (newImageFile) {
+        formData.append('workshop_image', newImageFile);
+      } else if (currentWorkshopImageUrl) {
+        formData.append('image_url', currentWorkshopImageUrl);
+      }
 
       try {
         const response = await fetch(`${API_BASE}/update_workshop.php`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: formData
         });
-        const res = await response.json();
+        const res = await response.json().catch(() => ({}));
         if (res.status === '1') {
           showToast('Workshop updated successfully!');
+          if (res.data?.image_url) {
+            currentWorkshopImageUrl = res.data.image_url;
+            currentTargetRow.setAttribute('data-image', res.data.image_url);
+          }
           switchView(workshopsListView);
           fetchWorkshops(currentPage);
         } else {
-          alert(res.message || 'Failed to update workshop.');
+          showToast(res.message || 'Failed to update workshop.', 'error');
         }
       } catch (err) {
         console.error(err);
@@ -1311,18 +1353,105 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Edit Workshop Image Mode & Preview Logic
+  let currentWorkshopImageUrl = '';
+  const editWsKeepPill = document.getElementById('editWsKeepPill');
+  const editWsReplacePill = document.getElementById('editWsReplacePill');
+  const editWsRadioKeep = document.getElementById('editWsRadioKeep');
+  const editWsRadioReplace = document.getElementById('editWsRadioReplace');
+  const editWsCurrentCard = document.getElementById('editWsCurrentCard');
+  const editWsCurrentThumb = document.getElementById('editWsCurrentThumb');
+  const editWsCurrentTitle = document.getElementById('editWsCurrentTitle');
+  const editWsTriggerReplaceBtn = document.getElementById('editWsTriggerReplaceBtn');
+  const editWsUploadWrapper = document.getElementById('editWsUploadWrapper');
   const editWsBrowseBtn = document.getElementById('editWsBrowseBtn');
   const editWsImageInput = document.getElementById('editWsImageInput');
   const editWsFileName = document.getElementById('editWsFileName');
+  const editWsNewPreviewCard = document.getElementById('editWsNewPreviewCard');
+  const editWsNewThumb = document.getElementById('editWsNewThumb');
+  const editWsCancelNewBtn = document.getElementById('editWsCancelNewBtn');
+  const editWsDropzoneBox = document.getElementById('editWsDropzoneBox');
+
+  function setEditWorkshopImageMode(mode) {
+    if (mode === 'replace') {
+      if (editWsRadioReplace) editWsRadioReplace.checked = true;
+      if (editWsReplacePill) editWsReplacePill.classList.add('active');
+      if (editWsKeepPill) editWsKeepPill.classList.remove('active');
+      if (editWsUploadWrapper) editWsUploadWrapper.style.display = 'block';
+    } else {
+      if (editWsRadioKeep) editWsRadioKeep.checked = true;
+      if (editWsKeepPill) editWsKeepPill.classList.add('active');
+      if (editWsReplacePill) editWsReplacePill.classList.remove('active');
+      if (editWsUploadWrapper) editWsUploadWrapper.style.display = 'none';
+      if (editWsImageInput) editWsImageInput.value = '';
+      if (editWsNewPreviewCard) editWsNewPreviewCard.style.display = 'none';
+      if (editWsFileName) editWsFileName.textContent = '';
+    }
+  }
+
+  if (editWsKeepPill) editWsKeepPill.addEventListener('click', () => setEditWorkshopImageMode('keep'));
+  if (editWsReplacePill) editWsReplacePill.addEventListener('click', () => setEditWorkshopImageMode('replace'));
+  if (editWsTriggerReplaceBtn) editWsTriggerReplaceBtn.addEventListener('click', () => setEditWorkshopImageMode('replace'));
+  if (editWsCancelNewBtn) editWsCancelNewBtn.addEventListener('click', () => setEditWorkshopImageMode('keep'));
+
   if (editWsBrowseBtn && editWsImageInput) {
     editWsBrowseBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       editWsImageInput.click();
     });
+  }
+
+  function handleEditWorkshopFileSelect(file) {
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Only JPG, PNG and WebP images are allowed.', 'error');
+      if (editWsImageInput) editWsImageInput.value = '';
+      if (editWsNewPreviewCard) editWsNewPreviewCard.style.display = 'none';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size must not exceed 5 MB.', 'error');
+      if (editWsImageInput) editWsImageInput.value = '';
+      if (editWsNewPreviewCard) editWsNewPreviewCard.style.display = 'none';
+      return;
+    }
+    if (editWsFileName) editWsFileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    if (editWsNewThumb) editWsNewThumb.src = URL.createObjectURL(file);
+    if (editWsNewPreviewCard) editWsNewPreviewCard.style.display = 'flex';
+  }
+
+  if (editWsImageInput) {
     editWsImageInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0] && editWsFileName) {
-        editWsFileName.textContent = e.target.files[0].name;
+      if (e.target.files && e.target.files[0]) {
+        handleEditWorkshopFileSelect(e.target.files[0]);
+      } else {
+        if (editWsNewPreviewCard) editWsNewPreviewCard.style.display = 'none';
+      }
+    });
+  }
+
+  if (editWsDropzoneBox) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      editWsDropzoneBox.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editWsDropzoneBox.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      editWsDropzoneBox.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editWsDropzoneBox.classList.remove('drag-over');
+      });
+    });
+    editWsDropzoneBox.addEventListener('drop', (e) => {
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        if (editWsImageInput) editWsImageInput.files = files;
+        handleEditWorkshopFileSelect(files[0]);
       }
     });
   }

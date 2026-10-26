@@ -449,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-enrollments', String(enrollments));
       row.setAttribute('data-protocol', protocol);
       row.setAttribute('data-status', status);
+      row.setAttribute('data-image', pkg.image_url || '');
       row.setAttribute('data-short-desc', pkg.short_description || '');
       row.setAttribute('data-overview', pkg.overview || '');
       row.setAttribute('data-benefits', pkg.benefits || '');
@@ -1144,6 +1145,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setVal('editPatientMonitoring', currentTargetRow.getAttribute('data-monitoring') || '');
         setVal('editFollowupReview', currentTargetRow.getAttribute('data-followup') || '');
 
+        // Populate previous / current image preview
+        currentPackageImageUrl = currentTargetRow.getAttribute('data-image') || '';
+        if (editPkgCurrentThumb) {
+          editPkgCurrentThumb.src = currentPackageImageUrl || '../assets/package-thumb.jpg';
+        }
+        if (editPkgCurrentTitle) {
+          editPkgCurrentTitle.textContent = currentPackageImageUrl ? (currentPackageImageUrl.split('/').pop() || 'Current programme image') : 'Default image (assets/package-thumb.jpg)';
+        }
+        setEditPackageImageMode('keep');
+
         switchView(editPackageView);
 
         // Fetch fresh package details from MySQL database
@@ -1156,6 +1167,16 @@ document.addEventListener('DOMContentLoaded', () => {
           const result = await response.json();
           if (result.status === '1' && result.data) {
             const pkg = result.data;
+            if (pkg.image_url) {
+              currentPackageImageUrl = pkg.image_url;
+              currentTargetRow.setAttribute('data-image', pkg.image_url);
+              if (editPkgCurrentThumb) {
+                editPkgCurrentThumb.src = pkg.image_url;
+              }
+              if (editPkgCurrentTitle) {
+                editPkgCurrentTitle.textContent = pkg.image_url.split('/').pop() || 'Current programme image';
+              }
+            }
             let dbDoc1 = pkg.assigned_doctor_1 || pkg.assign_doctor_1 || pkg.assigned_doctor || '';
             let dbDoc2 = pkg.assigned_doctor_2 || pkg.assign_doctor_2 || '';
             const dbFullDoc = pkg.combined_doctor || pkg.assigned_doctor || pkg.assign_doctor || '';
@@ -1321,41 +1342,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const combinedDoctor = assignDoctor2 ? `${assignDoctor1}, ${assignDoctor2}` : assignDoctor1;
 
-      const payload = {
-        id: Number(id),
-        package_id: packageId,
-        package_name: pkgName,
-        category: category,
-        assigned_doctor: assignDoctor1,
-        assign_doctor: assignDoctor1,
-        assigned_doctor_1: assignDoctor1,
-        assigned_doctor_2: assignDoctor2,
-        assign_doctor_1: assignDoctor1,
-        assign_doctor_2: assignDoctor2,
-        combined_doctor: combinedDoctor,
-        price: price,
-        duration: duration,
-        short_description: shortDesc,
-        overview: overview,
-        benefits: benefits,
-        included: included,
-        diet_hydration: diet,
-        yoga_physio: yoga,
-        ayurveda_dinacharya: ayurveda,
-        daily_activity: dailyActivity,
-        patient_monitoring: patientMonitoring,
-        followup_review: followupReview
-      };
+      const isReplacing = editPkgRadioReplace && editPkgRadioReplace.checked;
+      const newImageFile = isReplacing ? editFileInput?.files?.[0] : null;
+
+      if (isReplacing && !newImageFile) {
+        showToast('Please select a new image file or choose "Keep Current Image".', 'error');
+        editFileInput?.focus();
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Save Programme</span>';
+        }
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('id', String(id));
+      formData.append('package_id', packageId);
+      formData.append('package_name', pkgName);
+      formData.append('category', category);
+      formData.append('assigned_doctor_1', assignDoctor1);
+      formData.append('assigned_doctor_2', assignDoctor2);
+      formData.append('assign_doctor_1', assignDoctor1);
+      formData.append('assign_doctor_2', assignDoctor2);
+      formData.append('combined_doctor', combinedDoctor);
+      formData.append('price', price);
+      formData.append('duration', duration);
+      formData.append('short_description', shortDesc);
+      formData.append('overview', overview);
+      formData.append('benefits', benefits);
+      formData.append('included', included);
+      formData.append('diet_hydration', diet);
+      formData.append('yoga_physio', yoga);
+      formData.append('ayurveda_dinacharya', ayurveda);
+      formData.append('daily_activity', dailyActivity);
+      formData.append('patient_monitoring', patientMonitoring);
+      formData.append('followup_review', followupReview);
+
+      if (newImageFile) {
+        formData.append('package_image', newImageFile);
+      } else if (currentPackageImageUrl) {
+        formData.append('image_url', currentPackageImageUrl);
+      }
 
       try {
         const response = await fetch(`${API_BASE}/update_package.php`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(payload)
+          body: formData
         });
         const res = await response.json().catch(() => ({}));
         if (res.status === '1') {
           showToast('Programme updated successfully!');
+          if (res.data?.image_url) {
+            currentPackageImageUrl = res.data.image_url;
+            currentTargetRow.setAttribute('data-image', res.data.image_url);
+          }
           switchView(packagesListView);
           await fetchPackages(currentPage);
         } else {
@@ -1410,14 +1450,104 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Edit Package Image Mode & Preview Logic
+  let currentPackageImageUrl = '';
+  const editPkgKeepPill = document.getElementById('editPkgKeepPill');
+  const editPkgReplacePill = document.getElementById('editPkgReplacePill');
+  const editPkgRadioKeep = document.getElementById('editPkgRadioKeep');
+  const editPkgRadioReplace = document.getElementById('editPkgRadioReplace');
+  const editPkgCurrentCard = document.getElementById('editPkgCurrentCard');
+  const editPkgCurrentThumb = document.getElementById('editPkgCurrentThumb');
+  const editPkgCurrentTitle = document.getElementById('editPkgCurrentTitle');
+  const editPkgTriggerReplaceBtn = document.getElementById('editPkgTriggerReplaceBtn');
+  const editPkgUploadWrapper = document.getElementById('editPkgUploadWrapper');
   const editBrowseBtn = document.getElementById('editBrowseFileBtn');
   const editFileInput = document.getElementById('editPkgImageInput');
   const editFileName = document.getElementById('editSelectedFileName');
+  const editPkgNewPreviewCard = document.getElementById('editPkgNewPreviewCard');
+  const editPkgNewThumb = document.getElementById('editPkgNewThumb');
+  const editPkgCancelNewBtn = document.getElementById('editPkgCancelNewBtn');
+  const editDropzoneBox = document.getElementById('editDropzoneBox');
+
+  function setEditPackageImageMode(mode) {
+    if (mode === 'replace') {
+      if (editPkgRadioReplace) editPkgRadioReplace.checked = true;
+      if (editPkgReplacePill) editPkgReplacePill.classList.add('active');
+      if (editPkgKeepPill) editPkgKeepPill.classList.remove('active');
+      if (editPkgUploadWrapper) editPkgUploadWrapper.style.display = 'block';
+    } else {
+      if (editPkgRadioKeep) editPkgRadioKeep.checked = true;
+      if (editPkgKeepPill) editPkgKeepPill.classList.add('active');
+      if (editPkgReplacePill) editPkgReplacePill.classList.remove('active');
+      if (editPkgUploadWrapper) editPkgUploadWrapper.style.display = 'none';
+      if (editFileInput) editFileInput.value = '';
+      if (editPkgNewPreviewCard) editPkgNewPreviewCard.style.display = 'none';
+      if (editFileName) editFileName.textContent = '';
+    }
+  }
+
+  if (editPkgKeepPill) editPkgKeepPill.addEventListener('click', () => setEditPackageImageMode('keep'));
+  if (editPkgReplacePill) editPkgReplacePill.addEventListener('click', () => setEditPackageImageMode('replace'));
+  if (editPkgTriggerReplaceBtn) editPkgTriggerReplaceBtn.addEventListener('click', () => setEditPackageImageMode('replace'));
+  if (editPkgCancelNewBtn) editPkgCancelNewBtn.addEventListener('click', () => setEditPackageImageMode('keep'));
+
   if (editBrowseBtn && editFileInput) {
-    editBrowseBtn.addEventListener('click', () => editFileInput.click());
+    editBrowseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editFileInput.click();
+    });
+  }
+
+  function handleEditPackageFileSelect(file) {
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Only JPG, PNG and WebP images are allowed.', 'error');
+      if (editFileInput) editFileInput.value = '';
+      if (editPkgNewPreviewCard) editPkgNewPreviewCard.style.display = 'none';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image size must not exceed 5 MB.', 'error');
+      if (editFileInput) editFileInput.value = '';
+      if (editPkgNewPreviewCard) editPkgNewPreviewCard.style.display = 'none';
+      return;
+    }
+    if (editFileName) editFileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    if (editPkgNewThumb) editPkgNewThumb.src = URL.createObjectURL(file);
+    if (editPkgNewPreviewCard) editPkgNewPreviewCard.style.display = 'flex';
+  }
+
+  if (editFileInput) {
     editFileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0] && editFileName) {
-        editFileName.textContent = e.target.files[0].name;
+      if (e.target.files && e.target.files[0]) {
+        handleEditPackageFileSelect(e.target.files[0]);
+      } else {
+        if (editPkgNewPreviewCard) editPkgNewPreviewCard.style.display = 'none';
+      }
+    });
+  }
+
+  if (editDropzoneBox) {
+    ['dragenter', 'dragover'].forEach(eventName => {
+      editDropzoneBox.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editDropzoneBox.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      editDropzoneBox.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        editDropzoneBox.classList.remove('drag-over');
+      });
+    });
+    editDropzoneBox.addEventListener('drop', (e) => {
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        if (editFileInput) editFileInput.files = files;
+        handleEditPackageFileSelect(files[0]);
       }
     });
   }
