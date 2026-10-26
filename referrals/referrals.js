@@ -283,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
       partnersTableHead.innerHTML = `
         <tr>
           <th scope="col" class="th-partner">Doctor</th>
-          <th scope="col" class="th-email">Specialization & Area</th>
           <th scope="col" class="th-phone">Contact</th>
           <th scope="col" class="th-code">Doctor Referral Code</th>
           <th scope="col" class="th-referred">Patients Referred</th>
@@ -450,12 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="partner-name">${doctor.full_name || '-'}</span>
                 <span class="partner-id">${doctor.doctorid || '-'}</span>
               </div>
-            </div>
-          </td>
-          <td>
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-              <span style="font-weight: 600; color: #2B2B1E; font-size: 13.5px;">${doctor.expertise || '-'}</span>
-              <span style="font-size: 12.5px; color: #8E8A76;">${doctor.area || '-'}</span>
             </div>
           </td>
           <td>
