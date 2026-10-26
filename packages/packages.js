@@ -1410,6 +1410,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const editBrowseBtn = document.getElementById('editBrowseFileBtn');
+  const editFileInput = document.getElementById('editPkgImageInput');
+  const editFileName = document.getElementById('editSelectedFileName');
+  if (editBrowseBtn && editFileInput) {
+    editBrowseBtn.addEventListener('click', () => editFileInput.click());
+    editFileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0] && editFileName) {
+        editFileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+
   // Initial Fetch
   loadDoctorsList();
   fetchPackages(1);
