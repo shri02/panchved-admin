@@ -28,6 +28,36 @@ if ($id <= 0 && $patient_id === '') {
 }
 
 if ($connection1) {
+    // 1. First retrieve the patient's phone_number and email so we can also remove their user account
+    $phone_number = '';
+    $email = '';
+    if ($id > 0) {
+        $findStmt = mysqli_prepare($connection1, "SELECT phone_number, email FROM patients WHERE id = ? LIMIT 1");
+        if ($findStmt) {
+            mysqli_stmt_bind_param($findStmt, 'i', $id);
+            mysqli_stmt_execute($findStmt);
+            mysqli_stmt_bind_result($findStmt, $found_phone, $found_email);
+            if (mysqli_stmt_fetch($findStmt)) {
+                $phone_number = trim((string)$found_phone);
+                $email = trim((string)$found_email);
+            }
+            mysqli_stmt_close($findStmt);
+        }
+    } else {
+        $findStmt = mysqli_prepare($connection1, "SELECT phone_number, email FROM patients WHERE patient_id = ? LIMIT 1");
+        if ($findStmt) {
+            mysqli_stmt_bind_param($findStmt, 's', $patient_id);
+            mysqli_stmt_execute($findStmt);
+            mysqli_stmt_bind_result($findStmt, $found_phone, $found_email);
+            if (mysqli_stmt_fetch($findStmt)) {
+                $phone_number = trim((string)$found_phone);
+                $email = trim((string)$found_email);
+            }
+            mysqli_stmt_close($findStmt);
+        }
+    }
+
+    // 2. Delete the record from `patients` table
     if ($id > 0) {
         $stmt = mysqli_prepare($connection1, "DELETE FROM patients WHERE id = ?");
         if ($stmt) {
@@ -45,9 +75,35 @@ if ($connection1) {
             mysqli_stmt_close($stmt);
         }
     }
+
+    // 3. Also delete the patient's login account from `users` table
+    if ($phone_number !== '' || $email !== '') {
+        if ($phone_number !== '' && $email !== '') {
+            $delUserStmt = mysqli_prepare($connection1, "DELETE FROM users WHERE role = 'Patient' AND (phone_number = ? OR email = ?)");
+            if ($delUserStmt) {
+                mysqli_stmt_bind_param($delUserStmt, 'ss', $phone_number, $email);
+                mysqli_stmt_execute($delUserStmt);
+                mysqli_stmt_close($delUserStmt);
+            }
+        } elseif ($phone_number !== '') {
+            $delUserStmt = mysqli_prepare($connection1, "DELETE FROM users WHERE role = 'Patient' AND phone_number = ?");
+            if ($delUserStmt) {
+                mysqli_stmt_bind_param($delUserStmt, 's', $phone_number);
+                mysqli_stmt_execute($delUserStmt);
+                mysqli_stmt_close($delUserStmt);
+            }
+        } elseif ($email !== '') {
+            $delUserStmt = mysqli_prepare($connection1, "DELETE FROM users WHERE role = 'Patient' AND email = ?");
+            if ($delUserStmt) {
+                mysqli_stmt_bind_param($delUserStmt, 's', $email);
+                mysqli_stmt_execute($delUserStmt);
+                mysqli_stmt_close($delUserStmt);
+            }
+        }
+    }
 }
 
 echo json_encode([
     'status' => '1',
-    'message' => 'Patient deleted successfully.'
+    'message' => 'Patient and user account deleted successfully.'
 ]);
