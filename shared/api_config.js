@@ -3,7 +3,7 @@
  */
 
 (function () {
-  const subfolders = ['patients', 'doctors', 'appointments', 'dashboard', 'packages', 'workshops', 'profile', 'referrals', 'shared'];
+  const subfolders = ['patients', 'doctors', 'appointments', 'dashboard', 'packages', 'workshops', 'profile', 'referrals', 'shared', 'billings', 'billing'];
   const isInSubfolder = subfolders.some(folder => window.location.pathname.includes('/' + folder + '/'));
   const isDigitalBolt = window.location.hostname.includes('digitalbolt.co');
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
