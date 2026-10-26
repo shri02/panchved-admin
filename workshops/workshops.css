@@ -9,7 +9,9 @@
   display: none;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1), transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .workshop-view-section.active {
@@ -42,16 +44,18 @@
   flex: 1;
   height: 48px;
   border-radius: var(--radius-md, 12px);
-  background: #FFFFFF;
-  border: 1.5px solid var(--border-color, #E2E8F0);
+  background: #ffffff;
+  border: 1.5px solid var(--border-color, #e2e8f0);
   display: flex;
   align-items: center;
   padding: 0 16px;
-  transition: border-color var(--transition-fast, 0.18s ease), box-shadow var(--transition-fast, 0.18s ease);
+  transition:
+    border-color var(--transition-fast, 0.18s ease),
+    box-shadow var(--transition-fast, 0.18s ease);
 }
 
 .workshops-toolbar .search-box-wrapper:focus-within {
-  border-color: var(--primary-teal, #00828A);
+  border-color: var(--primary-teal, #00828a);
   box-shadow: 0 0 0 3px rgba(0, 130, 138, 0.12);
 }
 
@@ -73,8 +77,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-color: var(--primary-teal, #00828A);
-  color: #FFFFFF;
+  background-color: var(--primary-teal, #00828a);
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   padding: 12px 24px;
@@ -88,7 +92,7 @@
 }
 
 .btn-primary-teal:hover {
-  background-color: var(--primary-teal-hover, #006D74);
+  background-color: var(--primary-teal-hover, #006d74);
   box-shadow: 0 4px 12px rgba(0, 130, 138, 0.3);
   transform: translateY(-1px);
 }
@@ -111,13 +115,13 @@
 .workshops-table .th-ws-name,
 .workshops-table .td-ws-name {
   font-weight: 700;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary, #0f172a);
   min-width: 220px;
 }
 
 .ws-status.status-upcoming {
-  background-color: #DCFCE7;
-  color: #16A34A;
+  background-color: #dcfce7;
+  color: #16a34a;
   font-weight: 600;
   padding: 5px 16px;
   border-radius: 50px;
@@ -125,8 +129,8 @@
 }
 
 .ws-status.status-completed {
-  background-color: #E0F2FE;
-  color: #0284C7;
+  background-color: #e0f2fe;
+  color: #0284c7;
   font-weight: 600;
   padding: 5px 16px;
   border-radius: 50px;
@@ -140,7 +144,9 @@
   min-width: 145px;
   padding: 6px 0;
   border-radius: 10px;
-  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 10px 25px -4px rgba(0, 0, 0, 0.12),
+    0 4px 10px -2px rgba(0, 0, 0, 0.04);
 }
 
 /* For bottom rows, open dropdown upwards so it never pushes or creates extra space below */
@@ -171,8 +177,8 @@
 }
 
 .ws-dropdown .dropdown-item:hover {
-  background-color: #F8FAFC;
-  color: var(--primary-teal, #00828A);
+  background-color: #f8fafc;
+  color: var(--primary-teal, #00828a);
 }
 
 .ws-dropdown .dropdown-item .item-icon {
@@ -198,14 +204,14 @@
   font-family: inherit;
   font-size: 15px;
   font-weight: 700;
-  color: #0F172A;
+  color: #0f172a;
   cursor: pointer;
   padding: 4px 0;
   transition: color var(--transition-fast, 0.18s ease);
 }
 
 .back-btn:hover {
-  color: var(--primary-teal, #00828A);
+  color: var(--primary-teal, #00828a);
 }
 
 .back-btn .back-icon {
@@ -219,8 +225,8 @@
    Add / Edit Workshop Form Card (Screens 2 & 4)
    -------------------------------------------------------------------------- */
 .workshop-form-card {
-  background: #FFFFFF;
-  border: 1px solid var(--border-color, #E2E8F0);
+  background: #ffffff;
+  border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 16px;
   padding: 28px 32px 32px;
   width: 100%;
@@ -252,7 +258,7 @@
 }
 
 .required-star {
-  color: #EF4444;
+  color: #ef4444;
   margin-left: 3px;
   font-weight: 700;
 }
@@ -260,14 +266,16 @@
 .workshop-form-card .form-control-input {
   width: 100%;
   height: 44px;
-  border: 1.5px solid var(--border-color, #E2E8F0);
+  border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 8px;
   padding: 0 14px;
   font-family: inherit;
   font-size: 14px;
-  color: var(--text-primary, #0F172A);
-  background-color: #FFFFFF;
-  transition: border-color var(--transition-fast, 0.18s ease), box-shadow var(--transition-fast, 0.18s ease);
+  color: var(--text-primary, #0f172a);
+  background-color: #ffffff;
+  transition:
+    border-color var(--transition-fast, 0.18s ease),
+    box-shadow var(--transition-fast, 0.18s ease);
 }
 
 .workshop-form-card input[type="date"].form-control-input,
@@ -275,41 +283,49 @@
   cursor: pointer;
   padding-right: 10px;
   font-family: inherit;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary, #0f172a);
 }
 
-.workshop-form-card input[type="date"].form-control-input::-webkit-calendar-picker-indicator,
-.workshop-form-card input[type="time"].form-control-input::-webkit-calendar-picker-indicator {
+.workshop-form-card
+  input[type="date"].form-control-input::-webkit-calendar-picker-indicator,
+.workshop-form-card
+  input[type="time"].form-control-input::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.65;
   padding: 5px;
   border-radius: 4px;
-  transition: opacity var(--transition-fast, 0.18s ease), background-color var(--transition-fast, 0.18s ease);
+  transition:
+    opacity var(--transition-fast, 0.18s ease),
+    background-color var(--transition-fast, 0.18s ease);
 }
 
-.workshop-form-card input[type="date"].form-control-input::-webkit-calendar-picker-indicator:hover,
-.workshop-form-card input[type="time"].form-control-input::-webkit-calendar-picker-indicator:hover {
+.workshop-form-card
+  input[type="date"].form-control-input::-webkit-calendar-picker-indicator:hover,
+.workshop-form-card
+  input[type="time"].form-control-input::-webkit-calendar-picker-indicator:hover {
   opacity: 1;
-  background-color: #F1F5F9;
+  background-color: #f1f5f9;
 }
 
 .workshop-form-card .form-control-textarea {
-  border: 1.5px solid var(--border-color, #E2E8F0);
+  border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 8px;
   padding: 10px 14px;
   font-family: inherit;
   font-size: 14px;
-  color: var(--text-primary, #0F172A);
-  background-color: #FFFFFF;
+  color: var(--text-primary, #0f172a);
+  background-color: #ffffff;
   resize: vertical;
   min-height: 48px;
   line-height: 1.45;
-  transition: border-color var(--transition-fast, 0.18s ease), box-shadow var(--transition-fast, 0.18s ease);
+  transition:
+    border-color var(--transition-fast, 0.18s ease),
+    box-shadow var(--transition-fast, 0.18s ease);
 }
 
 .workshop-form-card .form-control-input:focus,
 .workshop-form-card .form-control-textarea:focus {
-  border-color: var(--primary-teal, #00828A);
+  border-color: var(--primary-teal, #00828a);
   box-shadow: 0 0 0 3px rgba(0, 130, 138, 0.12);
   outline: none;
 }
@@ -326,38 +342,40 @@
 .select-dropdown-container .form-select-input {
   width: 100%;
   height: 44px;
-  background-color: #FFFFFF;
-  border: 1.5px solid var(--border-color, #E2E8F0);
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-color, #e2e8f0);
   border-radius: 8px;
   padding: 0 40px 0 14px;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary, #0f172a);
   outline: none;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   cursor: pointer;
-  transition: border-color var(--transition-fast, 0.18s ease), box-shadow var(--transition-fast, 0.18s ease);
+  transition:
+    border-color var(--transition-fast, 0.18s ease),
+    box-shadow var(--transition-fast, 0.18s ease);
 }
 
 .select-dropdown-container .form-select-input:hover {
-  border-color: #CBD5E1;
+  border-color: #cbd5e1;
 }
 
 .select-dropdown-container .form-select-input:focus {
-  border-color: var(--primary-teal, #00828A);
+  border-color: var(--primary-teal, #00828a);
   box-shadow: 0 0 0 3px rgba(0, 130, 138, 0.12);
 }
 
 .select-dropdown-container .form-select-input:invalid,
 .select-dropdown-container .form-select-input option[value=""] {
-  color: #94A3B8;
+  color: #94a3b8;
 }
 
 .select-dropdown-container .form-select-input option {
-  color: var(--text-primary, #0F172A);
+  color: var(--text-primary, #0f172a);
 }
 
 .select-dropdown-container .select-chevron {
@@ -367,7 +385,7 @@
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: #64748B;
+  color: #64748b;
   pointer-events: none;
 }
 
@@ -392,20 +410,22 @@
    Drag and Drop Upload Box (Screens 2 & 4)
    -------------------------------------------------------------------------- */
 .dropzone-box {
-  border: 1.5px dashed #38BDF8;
+  border: 1.5px dashed #38bdf8;
   border-radius: 12px;
   padding: 28px 16px;
   text-align: center;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   position: relative;
   cursor: pointer;
-  transition: background-color var(--transition-fast, 0.18s ease), border-color var(--transition-fast, 0.18s ease);
+  transition:
+    background-color var(--transition-fast, 0.18s ease),
+    border-color var(--transition-fast, 0.18s ease);
 }
 
 .dropzone-box:hover,
 .dropzone-box.drag-over {
-  background-color: #F0F9FF;
-  border-color: #0284C7;
+  background-color: #f0f9ff;
+  border-color: #0284c7;
 }
 
 .dropzone-file-input {
@@ -422,8 +442,8 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: #E0F2FE;
-  color: #0284C7;
+  background-color: #e0f2fe;
+  color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -435,14 +455,14 @@
   height: 24px;
   max-width: 24px;
   max-height: 24px;
-  fill: #00828A;
+  fill: #00828a;
   display: block;
 }
 
 .dropzone-main-text {
   font-size: 14px;
   font-weight: 600;
-  color: #1E293B;
+  color: #1e293b;
   margin-bottom: 6px;
 }
 
@@ -452,15 +472,15 @@
   justify-content: center;
   margin: 6px auto;
   font-size: 12px;
-  color: #94A3B8;
+  color: #94a3b8;
   font-weight: 600;
 }
 
 .btn-browse-file {
   display: inline-block;
-  background: #FFFFFF;
-  border: 1px solid var(--primary-teal, #00828A);
-  color: var(--primary-teal, #00828A);
+  background: #ffffff;
+  border: 1px solid var(--primary-teal, #00828a);
+  color: var(--primary-teal, #00828a);
   padding: 6px 18px;
   border-radius: 6px;
   font-family: inherit;
@@ -473,15 +493,15 @@
 }
 
 .btn-browse-file:hover {
-  background-color: var(--primary-teal, #00828A);
-  color: #FFFFFF;
+  background-color: var(--primary-teal, #00828a);
+  color: #ffffff;
 }
 
 .dropzone-selected-filename {
   display: block;
   margin-top: 8px;
   font-size: 13px;
-  color: var(--primary-teal, #00828A);
+  color: var(--primary-teal, #00828a);
   font-weight: 600;
 }
 
@@ -496,7 +516,9 @@
   z-index: 1100;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.22s ease, visibility 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    visibility 0.22s ease;
 }
 
 .filter-drawer-backdrop.open {
@@ -511,7 +533,7 @@
   bottom: 0;
   width: 320px;
   max-width: 100vw;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
   z-index: 1101;
   display: flex;
@@ -529,7 +551,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .filter-drawer-title {
@@ -545,7 +567,7 @@
   border-radius: 50%;
   background: none;
   border: none;
-  color: #64748B;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -554,8 +576,8 @@
 }
 
 .filter-close-btn:hover {
-  background-color: #F1F5F9;
-  color: #0F172A;
+  background-color: #f1f5f9;
+  color: #0f172a;
 }
 
 .filter-drawer-body {
@@ -582,14 +604,14 @@
 .filter-accordion-header .accordion-title {
   font-size: 12.5px;
   font-weight: 800;
-  color: #1E293B;
+  color: #1e293b;
   letter-spacing: 0.8px;
 }
 
 .filter-accordion-header .accordion-chevron {
   width: 16px;
   height: 16px;
-  color: #64748B;
+  color: #64748b;
   transition: transform 0.2s ease;
 }
 
@@ -628,40 +650,40 @@
 .filter-checkbox-label .checkmark-box {
   width: 18px;
   height: 18px;
-  border: 1.5px solid #CBD5E1;
+  border: 1.5px solid #cbd5e1;
   border-radius: 4px;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   position: relative;
   transition: all 0.18s ease;
 }
 
 .filter-checkbox-label .custom-checkbox:checked ~ .checkmark-box {
-  background-color: var(--primary-teal, #00828A);
-  border-color: var(--primary-teal, #00828A);
+  background-color: var(--primary-teal, #00828a);
+  border-color: var(--primary-teal, #00828a);
 }
 
 .filter-checkbox-label .custom-checkbox:checked ~ .checkmark-box::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 5px;
   top: 2px;
   width: 5px;
   height: 9px;
-  border: solid #FFFFFF;
+  border: solid #ffffff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .filter-drawer-footer {
   padding: 20px 24px;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid #f1f5f9;
 }
 
 .btn-reset-filter {
   width: 100%;
   height: 46px;
   background-color: var(--brand-magenta, #941854);
-  color: #FFFFFF;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   font-family: inherit;
@@ -673,7 +695,7 @@
 }
 
 .btn-reset-filter:hover {
-  background-color: #7D0E44;
+  background-color: #7d0e44;
   box-shadow: 0 4px 12px rgba(148, 24, 84, 0.4);
   transform: translateY(-1px);
 }
@@ -688,17 +710,19 @@
 #viewWorkshopModal .modal-card {
   max-width: 580px;
   width: 100%;
-  background: #FFFFFF;
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  border: 1px solid var(--border-color, #E2E8F0);
+  border: 1px solid var(--border-color, #e2e8f0);
   position: relative;
   overflow: hidden;
+  max-height: 90vh;
+  overflow: auto;
 }
 
 #viewWorkshopModal .modal-header {
   padding: 24px 28px 18px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -708,8 +732,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #D6F1F3;
-  color: #0284C7;
+  background-color: #d6f1f3;
+  color: #0284c7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -719,14 +743,14 @@
 #viewWorkshopModal .modal-header-icon {
   width: 24px;
   height: 24px;
-  stroke: #0284C7;
+  stroke: #0284c7;
   stroke-width: 2;
 }
 
 #viewWorkshopModal .modal-title {
   font-size: 20px;
   font-weight: 800;
-  color: #0F172A;
+  color: #0f172a;
   letter-spacing: -0.3px;
   line-height: 1.2;
 }
@@ -734,7 +758,7 @@
 #viewWorkshopModal .modal-subtitle {
   font-size: 13px;
   font-weight: 500;
-  color: #64748B;
+  color: #64748b;
   margin-top: 2px;
 }
 
@@ -759,19 +783,19 @@
   width: 175px;
   flex-shrink: 0;
   font-weight: 600;
-  color: #0284C7;
+  color: #0284c7;
   letter-spacing: -0.1px;
 }
 
 #viewWorkshopModal .detail-val {
   flex: 1;
   font-weight: 500;
-  color: #0F172A;
+  color: #0f172a;
   word-break: break-word;
 }
 
 #viewWorkshopModal .detail-val.text-long {
-  color: #0F172A;
+  color: #0f172a;
   font-weight: 400;
   line-height: 1.5;
 }
@@ -869,12 +893,12 @@
   align-items: center;
   gap: 8px;
   padding: 8px 18px;
-  border: 1.5px solid #E2E8F0;
+  border: 1.5px solid #e2e8f0;
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 600;
   color: #475569;
-  background: #F8FAFC;
+  background: #f8fafc;
   cursor: pointer;
   user-select: none;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
@@ -885,14 +909,14 @@
 }
 
 .image-choice-pill:hover {
-  border-color: #CBD5E1;
-  background: #F1F5F9;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
 }
 
 .image-choice-pill.active {
   background: rgba(0, 130, 138, 0.08);
-  border-color: var(--primary-teal, #00828A);
-  color: var(--primary-teal, #00828A);
+  border-color: var(--primary-teal, #00828a);
+  color: var(--primary-teal, #00828a);
 }
 
 .image-choice-pill .pill-icon {
@@ -905,15 +929,15 @@
   align-items: center;
   gap: 16px;
   padding: 14px 18px;
-  background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   margin-bottom: 10px;
   transition: border-color 0.18s ease;
 }
 
 .current-image-preview-card:hover {
-  border-color: #CBD5E1;
+  border-color: #cbd5e1;
 }
 
 .current-image-thumb-wrapper {
@@ -922,8 +946,8 @@
   height: 72px;
   border-radius: 10px;
   overflow: hidden;
-  background: #E2E8F0;
-  border: 1px solid #CBD5E1;
+  background: #e2e8f0;
+  border: 1px solid #cbd5e1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
@@ -951,20 +975,20 @@
   letter-spacing: 0.5px;
   padding: 2px 8px;
   border-radius: 4px;
-  background: #DCFCE7;
+  background: #dcfce7;
   color: #166534;
 }
 
 .current-image-title {
   font-size: 13.5px;
   font-weight: 600;
-  color: #0F172A;
+  color: #0f172a;
   margin: 0 0 2px 0;
 }
 
 .current-image-desc {
   font-size: 12px;
-  color: #64748B;
+  color: #64748b;
   margin: 0;
 }
 
@@ -973,8 +997,8 @@
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border: 1px solid #CBD5E1;
-  background: #FFFFFF;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
   color: #334155;
   font-size: 12.5px;
   font-weight: 600;
@@ -984,9 +1008,9 @@
 }
 
 .btn-change-image-action:hover {
-  border-color: var(--primary-teal, #00828A);
-  color: var(--primary-teal, #00828A);
-  background: #F0FDFA;
+  border-color: var(--primary-teal, #00828a);
+  color: var(--primary-teal, #00828a);
+  background: #f0fdfa;
 }
 
 .edit-upload-box-wrapper {
@@ -998,8 +1022,8 @@
   align-items: center;
   gap: 14px;
   padding: 12px 16px;
-  background: #F0FDF4;
-  border: 1.5px solid #86EFAC;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
   border-radius: 10px;
   margin-top: 12px;
 }
@@ -1009,7 +1033,7 @@
   height: 56px;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid #BBF7D0;
+  border: 1px solid #bbf7d0;
   flex-shrink: 0;
 }
 
@@ -1024,7 +1048,7 @@
 .badge-new-image {
   font-size: 11px;
   font-weight: 700;
-  color: #15803D;
+  color: #15803d;
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
@@ -1032,7 +1056,7 @@
 .new-filename {
   font-size: 13px;
   font-weight: 600;
-  color: #1E293B;
+  color: #1e293b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1040,9 +1064,9 @@
 
 .btn-remove-new-image {
   margin-left: auto;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  color: #64748B;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
@@ -1052,8 +1076,7 @@
 }
 
 .btn-remove-new-image:hover {
-  border-color: #EF4444;
-  color: #EF4444;
-  background: #FEF2F2;
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
 }
-
