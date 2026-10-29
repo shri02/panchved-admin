@@ -56,7 +56,9 @@
   align-items: center;
   gap: 16px;
   box-shadow: var(--shadow-card);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .log-kpi-card:hover {
@@ -193,7 +195,9 @@
   background-repeat: no-repeat;
   background-position: right 10px center;
   background-size: 14px;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .date-filter-dropdown:focus {
@@ -234,15 +238,27 @@
 }
 
 @keyframes logSpin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Logs Table Custom Cells */
-.logs-table th.th-user { width: 24%; }
-.logs-table th.th-role { width: 12%; }
-.logs-table th.th-contact { width: 22%; }
-.logs-table th.th-timing { width: 22%; }
-.logs-table th.th-device { width: 20%; }
+.logs-table th.th-user {
+  width: 24%;
+}
+.logs-table th.th-role {
+  width: 12%;
+}
+.logs-table th.th-contact {
+  width: 22%;
+}
+.logs-table th.th-timing {
+  width: 22%;
+}
+.logs-table th.th-device {
+  width: 20%;
+}
 
 .user-cell-meta {
   display: flex;
@@ -437,6 +453,11 @@
   font-weight: 500;
 }
 
+.toolbar-actions-group {
+  display: flex;
+  gap: 16px;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 1024px) {
   .log-kpi-grid {
@@ -448,17 +469,17 @@
   .log-kpi-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .logs-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .role-filter-group {
     width: 100%;
     justify-content: center;
   }
-  
+
   .toolbar-actions-group {
     display: flex;
     justify-content: space-between;
@@ -469,4 +490,3 @@
     width: 100%;
   }
 }
-
