@@ -480,7 +480,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modalApptDoctor) modalApptDoctor.textContent = doctor;
         if (modalApptDuration) modalApptDuration.textContent = duration;
         if (modalApptAgenda) modalApptAgenda.textContent = agenda;
-        if (modalApptPrescription) modalApptPrescription.textContent = prescription;
+        let displayPrescription = prescription;
+        if (prescription && prescription.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(prescription);
+            const parts = [];
+            if (parsed.diagnosis) parts.push(`Diagnosis: ${parsed.diagnosis}${parsed.diagnosis_duration ? ' (' + parsed.diagnosis_duration + ')' : ''}`);
+            if (Array.isArray(parsed.medications) && parsed.medications.length > 0) {
+              const medList = parsed.medications.map(m => `${m.medication || ''} [${m.dose || ''}, ${m.frequency || ''}, ${m.duration || ''}]`).join('; ');
+              parts.push(`Meds: ${medList}`);
+            }
+            if (parsed.examination_findings) parts.push(`Findings: ${parsed.examination_findings}`);
+            if (parsed.notes) parts.push(`Notes: ${parsed.notes}`);
+            if (parts.length > 0) displayPrescription = parts.join(' | ');
+          } catch (_) {}
+        }
+        if (modalApptPrescription) modalApptPrescription.textContent = displayPrescription;
 
         openModal(viewModal);
       }
