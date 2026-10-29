@@ -25,6 +25,11 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 
 require_once __DIR__ . '/db_connect.php';
 
+date_default_timezone_set('Asia/Kolkata');
+if (isset($connection1) && $connection1) {
+    @mysqli_query($connection1, "SET time_zone = '+05:30'");
+}
+
 // Accept both GET and JSON POST payload
 $raw_input = file_get_contents('php://input');
 $body_data = [];

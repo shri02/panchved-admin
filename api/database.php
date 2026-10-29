@@ -11,7 +11,7 @@
 */
 
 // Database server IP address or hostname
-$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? "p:162.214.80.27"));
+$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? "162.214.80.27"));
 
 // Database name
 $dbName = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? "jewrzsmy_panchved"));
@@ -64,6 +64,8 @@ if ($connection1) {
 
 if ($connection1 && !mysqli_connect_errno()) {
     mysqli_set_charset($connection1, "utf8mb4");
+    date_default_timezone_set('Asia/Kolkata');
+    @mysqli_query($connection1, "SET time_zone = '+05:30'");
 } else {
     $connection1 = null;
 }

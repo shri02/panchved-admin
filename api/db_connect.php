@@ -55,6 +55,7 @@ try {
 // 2. If host IP or connection failed, attempt fallback to localhost with credentials
 if (!$connection1 || !($connection1 instanceof mysqli)) {
     $candidateHosts = array_unique(array_filter([
+        '162.214.80.27',
         'localhost',
         '127.0.0.1',
         $dbHost ?? null,
@@ -105,5 +106,7 @@ if (!$connection1 || !($connection1 instanceof mysqli)) {
 }
 
 @mysqli_set_charset($connection1, 'utf8mb4');
+date_default_timezone_set('Asia/Kolkata');
+@mysqli_query($connection1, "SET time_zone = '+05:30'");
 $GLOBALS['connection1'] = $connection1;
 ?>
