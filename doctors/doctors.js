@@ -591,6 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-reg', doc.registration_number || '-');
       row.setAttribute('data-hpr', doc.hpr_registration_number || '-');
       row.setAttribute('data-referral-code', doc.referral_code || '');
+      row.setAttribute('data-last-login', doc.last_login_formatted || 'Never');
       row.setAttribute('data-about', doc.about || '');
       row.setAttribute('data-status', status);
 
@@ -958,6 +959,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalDocHpr) modalDocHpr.textContent = row.getAttribute('data-hpr') || '-';
       const modalDocReferral = document.getElementById('modalDocReferral');
       if (modalDocReferral) modalDocReferral.textContent = row.getAttribute('data-referral-code') || 'None (Direct)';
+      const modalDocLastLogin = document.getElementById('modalDocLastLogin');
+      if (modalDocLastLogin) modalDocLastLogin.textContent = row.getAttribute('data-last-login') || 'Never';
       if (modalDocAppointments) modalDocAppointments.textContent = '-';
       if (modalDocAbout) modalDocAbout.textContent = row.getAttribute('data-about') || '-';
 

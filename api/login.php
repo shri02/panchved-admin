@@ -10,6 +10,36 @@
 
 require_once __DIR__ . '/db_connect.php';
 
+// Helper: detect client IP address
+function getClientIpAddress() {
+    $ipKeys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR'];
+    foreach ($ipKeys as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ipList = explode(',', $_SERVER[$key]);
+            $ip = trim($ipList[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+}
+
+// Helper: record login timing into login_logs
+function recordLoginLog($conn, $userType, $userId, $identifier, $name, $phone, $email, $status = 'Success') {
+    if (!$conn) return false;
+    $clientIp = getClientIpAddress();
+    $userAgent = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 500);
+    $query = "INSERT INTO `login_logs` (`user_type`, `user_id`, `identifier`, `name`, `phone`, `email`, `ip_address`, `user_agent`, `status`, `login_time`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    if ($stmt = @mysqli_prepare($conn, $query)) {
+        mysqli_stmt_bind_param($stmt, "sisssssss", $userType, $userId, $identifier, $name, $phone, $email, $clientIp, $userAgent, $status);
+        @mysqli_stmt_execute($stmt);
+        @mysqli_stmt_close($stmt);
+        return true;
+    }
+    return false;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
@@ -167,6 +197,14 @@ $_SESSION['ocayur_user'] = $user;
 $_SESSION['ocayur_token'] = $token;
 $_SESSION['panchved_user'] = $user;
 $_SESSION['panchved_token'] = $token;
+
+// Log admin login timing into `login_logs`
+$adminId = (int)($user['id'] ?? 1);
+$adminCode = $user['username'] ?? 'admin';
+$adminName = $user['full_name'] ?? 'Admin';
+$adminPhone = $user['phone_number'] ?? '';
+$adminEmail = $user['email'] ?? '';
+recordLoginLog($connection1, 'Admin', $adminId, $adminCode, $adminName, $adminPhone, $adminEmail, 'Success');
 
 echo json_encode([
     'status' => '1',

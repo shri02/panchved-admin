@@ -214,6 +214,13 @@ mysqli_stmt_execute($data_stmt);
 $doctors = [];
 $data_result = mysqli_stmt_get_result($data_stmt);
 
+// Check if login_logs table exists for retrieving login timings
+$hasLoginLogs = false;
+$chkLogs = @mysqli_query($connection1, "SHOW TABLES LIKE 'login_logs'");
+if ($chkLogs && mysqli_num_rows($chkLogs) > 0) {
+    $hasLoginLogs = true;
+}
+
 if ($data_result) {
     while ($doc = mysqli_fetch_assoc($data_result)) {
         if (empty($doc['doctorid'])) {
@@ -225,6 +232,26 @@ if ($data_result) {
         $doc['end_time'] = !empty($doc['end_time']) ? $doc['end_time'] : '17:00:00';
         $doc['about'] = $doc['about'] ?? '';
         $doc['referral_code'] = $doc['referral_code'] ?? '';
+
+        // Retrieve last login timing
+        $lastLoginTime = null;
+        if ($hasLoginLogs) {
+            $lStmt = @mysqli_prepare($connection1, "SELECT login_time FROM `login_logs` WHERE user_type = 'Doctor' AND (user_id = ? OR identifier = ? OR phone = ?) ORDER BY login_time DESC LIMIT 1");
+            if ($lStmt) {
+                mysqli_stmt_bind_param($lStmt, "iss", $doc['id'], $doc['doctorid'], $doc['phone_number']);
+                mysqli_stmt_execute($lStmt);
+                $lRes = mysqli_stmt_get_result($lStmt);
+                if ($lRes && $lRow = mysqli_fetch_assoc($lRes)) {
+                    $lastLoginTime = $lRow['login_time'];
+                }
+                mysqli_stmt_close($lStmt);
+            }
+        }
+        if (!$lastLoginTime && !empty($doc['last_login'])) {
+            $lastLoginTime = $doc['last_login'];
+        }
+        $doc['last_login'] = $lastLoginTime;
+        $doc['last_login_formatted'] = $lastLoginTime ? date('d M Y, h:i A', strtotime($lastLoginTime)) : 'Never';
         $doctors[] = $doc;
     }
 } else {

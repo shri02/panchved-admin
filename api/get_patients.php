@@ -143,6 +143,13 @@ if ($stmt) {
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
 
+    // Check if login_logs table exists for retrieving login timings
+    $hasLoginLogs = false;
+    $chkLogs = @mysqli_query($connection1, "SHOW TABLES LIKE 'login_logs'");
+    if ($chkLogs && mysqli_num_rows($chkLogs) > 0) {
+        $hasLoginLogs = true;
+    }
+
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
             // Auto compute age if dob is set and age is 0
@@ -151,6 +158,26 @@ if ($stmt) {
                 $now = new DateTime();
                 $row['age'] = $now->diff($dob)->y;
             }
+            // Retrieve last login timing
+            $lastLoginTime = null;
+            if ($hasLoginLogs) {
+                $lStmt = @mysqli_prepare($connection1, "SELECT login_time FROM `login_logs` WHERE user_type = 'Patient' AND (user_id = ? OR identifier = ? OR phone = ?) ORDER BY login_time DESC LIMIT 1");
+                if ($lStmt) {
+                    mysqli_stmt_bind_param($lStmt, "iss", $row['id'], $row['patient_id'], $row['phone_number']);
+                    mysqli_stmt_execute($lStmt);
+                    $lRes = mysqli_stmt_get_result($lStmt);
+                    if ($lRes && $lRow = mysqli_fetch_assoc($lRes)) {
+                        $lastLoginTime = $lRow['login_time'];
+                    }
+                    mysqli_stmt_close($lStmt);
+                }
+            }
+            if (!$lastLoginTime && !empty($row['last_login'])) {
+                $lastLoginTime = $row['last_login'];
+            }
+            $row['last_login'] = $lastLoginTime;
+            $row['last_login_formatted'] = $lastLoginTime ? date('d M Y, h:i A', strtotime($lastLoginTime)) : 'Never';
+
             $patients[] = $row;
         }
     }

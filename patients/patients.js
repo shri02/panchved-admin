@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-gender', pt.gender || '-');
       row.setAttribute('data-package', pkg);
       row.setAttribute('data-appointments', String(pt.total_appointments ?? 0));
+      row.setAttribute('data-last-login', pt.last_login_formatted || 'Never');
       row.setAttribute('data-status', status);
 
       row.innerHTML = `
@@ -362,6 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modalPatientGender) modalPatientGender.textContent = gender;
         if (modalPatientPackage) modalPatientPackage.textContent = pkg;
         if (modalPatientAppointments) modalPatientAppointments.textContent = appointments;
+        const modalPatientLastLogin = document.getElementById('modalPatientLastLogin');
+        if (modalPatientLastLogin) modalPatientLastLogin.textContent = row.getAttribute('data-last-login') || 'Never';
 
         openModal();
       }
