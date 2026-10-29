@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/db_connect.php';
 require_once __DIR__ . '/azure_blob_upload.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -177,6 +178,28 @@ if (!$connection1) {
     exit;
 }
 
+$ws_name = $title;
+$ws_code = $workshop_id;
+$ws_numeric_id = $id;
+
+$chk_sql = $id > 0 ? "SELECT id, title, workshop_id FROM workshops WHERE id = ? LIMIT 1" : "SELECT id, title, workshop_id FROM workshops WHERE workshop_id = ? LIMIT 1";
+$chk_stmt = mysqli_prepare($connection1, $chk_sql);
+if ($chk_stmt) {
+    if ($id > 0) {
+        mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+    } else {
+        mysqli_stmt_bind_param($chk_stmt, 's', $workshop_id);
+    }
+    mysqli_stmt_execute($chk_stmt);
+    mysqli_stmt_bind_result($chk_stmt, $f_id, $f_title, $f_code);
+    if (mysqli_stmt_fetch($chk_stmt)) {
+        $ws_numeric_id = (int)$f_id;
+        if (empty($ws_name)) $ws_name = $f_title;
+        if (empty($ws_code)) $ws_code = $f_code;
+    }
+    mysqli_stmt_close($chk_stmt);
+}
+
 $sql = "UPDATE workshops SET " . implode(', ', $update_fields);
 if ($id > 0) {
     $sql .= " WHERE id = ?";
@@ -197,6 +220,24 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, $types, ...$params);
 
 if (mysqli_stmt_execute($stmt)) {
+    recordActivity(
+        $connection1,
+        'Workshop',
+        'workshop.updated',
+        "Updated workshop: {$ws_name}",
+        'Workshop',
+        $ws_numeric_id,
+        $ws_name,
+        array_filter([
+            'workshop_id' => $ws_code,
+            'title' => $title ?: null,
+            'status' => $status ?: null,
+            'speaker' => $assign_speaker ?: null,
+            'date' => $formatted_date ?? ($date ?: null),
+            'time' => $time ?: null,
+            'fee' => $fee_raw !== null && $fee_raw !== '' ? floatval($fee_raw) : null
+        ])
+    );
     mysqli_stmt_close($stmt);
     echo json_encode([
         'status' => '1',

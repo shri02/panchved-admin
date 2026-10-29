@@ -334,6 +334,24 @@ if (!$up_stmt) {
 mysqli_stmt_bind_param($up_stmt, $types, ...$bind_values);
 
 if (mysqli_stmt_execute($up_stmt)) {
+    require_once __DIR__ . '/activity_logger.php';
+    $docCode = $existing_doctor['doctorid'] ?: ('DOC' . str_pad((string)$id, 6, '0', STR_PAD_LEFT));
+    recordActivity($connection1, [
+        'module'      => 'Doctor',
+        'action'      => 'doctor.updated',
+        'entity_type' => 'doctors',
+        'entity_id'   => $docCode,
+        'entity_name' => $full_name,
+        'description' => "Updated doctor profile for '{$full_name}' ({$docCode})",
+        'new_values'  => [
+            'id' => $id,
+            'full_name' => $full_name,
+            'email' => $email,
+            'phone_number' => $phone_number,
+            'expertise' => $expertise,
+            'status' => $status
+        ]
+    ]);
     mysqli_stmt_close($up_stmt);
 
     echo json_encode([

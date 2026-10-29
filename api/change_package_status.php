@@ -70,6 +70,15 @@ if ($id > 0) {
 }
 
 if (mysqli_stmt_execute($stmt)) {
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Package',
+        'action'      => 'package.status_changed',
+        'entity_type' => 'packages',
+        'entity_id'   => $package_id ?: (string)$id,
+        'description' => "Changed package " . ($package_id ?: "ID #$id") . " status to '{$status}'",
+        'new_values'  => ['status' => $status]
+    ]);
     mysqli_stmt_close($stmt);
     echo json_encode([
         'status' => '1',

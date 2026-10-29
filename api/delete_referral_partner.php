@@ -47,6 +47,15 @@ if (!$table_check || mysqli_num_rows($table_check) === 0) {
     exit;
 }
 
+require_once __DIR__ . '/activity_logger.php';
+$partnerName = '';
+$partnerCode = '';
+$pLookup = @mysqli_query($connection1, "SELECT name, referral_code, partner_id FROM referral_partners WHERE id = $id");
+if ($pLookup && $pRow = mysqli_fetch_assoc($pLookup)) {
+    $partnerName = $pRow['name'];
+    $partnerCode = $pRow['partner_id'] ?: $pRow['referral_code'];
+}
+
 $stmt = mysqli_prepare($connection1, "DELETE FROM referral_partners WHERE id = ?");
 if (!$stmt) {
     echo json_encode([
@@ -63,6 +72,15 @@ if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
 
     if ($affected > 0) {
+        recordActivity($connection1, [
+            'module'      => 'Referral_Partner',
+            'action'      => 'referral_partner.deleted',
+            'entity_type' => 'referral_partners',
+            'entity_id'   => $partnerCode ?: (string)$id,
+            'entity_name' => $partnerName,
+            'description' => "Deleted referral partner '{$partnerName}' (" . ($partnerCode ?: $id) . ")",
+            'old_values'  => ['id' => $id, 'name' => $partnerName, 'code' => $partnerCode]
+        ]);
         echo json_encode([
             'status' => '1',
             'message' => 'Referral partner deleted successfully.'

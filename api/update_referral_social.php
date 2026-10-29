@@ -75,6 +75,22 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, "sssssi", $platform, $campaign_name, $target_url, $notes, $status, $id);
 
 if (mysqli_stmt_execute($stmt)) {
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Referral_Social',
+        'action'      => 'referral_social.updated',
+        'entity_type' => 'social_media_referrals',
+        'entity_id'   => (string)$id,
+        'entity_name' => $campaign_name,
+        'description' => "Updated {$platform} campaign '{$campaign_name}'",
+        'new_values'  => [
+            'id' => $id,
+            'platform' => $platform,
+            'campaign_name' => $campaign_name,
+            'target_url' => $target_url,
+            'status' => $status
+        ]
+    ]);
     mysqli_stmt_close($stmt);
     echo json_encode([
         'status' => '1',

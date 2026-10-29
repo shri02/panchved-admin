@@ -57,6 +57,7 @@ if ($connection1) {
         }
         mysqli_stmt_close($stmt);
     }
+}
 if ($user) {
     $roleLower = strtolower(trim((string)($user['role'] ?? '')));
     if (!in_array($roleLower, ['admin', 'super admin', 'administrator'], true)) {

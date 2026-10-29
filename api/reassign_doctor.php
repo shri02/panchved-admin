@@ -9,6 +9,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -72,6 +73,33 @@ if ($doctor_name === '' && $doctor_id <= 0) {
     exit;
 }
 
+// Fetch current appointment info for audit logging
+$app_code = $appointment_id;
+$app_num_id = $id;
+$prev_doctor = '';
+$patient_name = '';
+
+if ($connection1) {
+    $chk_sql = $id > 0 ? "SELECT id, appointment_id, patient_name, doctor_name FROM appointments WHERE id = ? LIMIT 1" : "SELECT id, appointment_id, patient_name, doctor_name FROM appointments WHERE appointment_id = ? LIMIT 1";
+    $chk_stmt = mysqli_prepare($connection1, $chk_sql);
+    if ($chk_stmt) {
+        if ($id > 0) {
+            mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+        } else {
+            mysqli_stmt_bind_param($chk_stmt, 's', $appointment_id);
+        }
+        mysqli_stmt_execute($chk_stmt);
+        mysqli_stmt_bind_result($chk_stmt, $f_id, $f_code, $f_pname, $f_prev_doc);
+        if (mysqli_stmt_fetch($chk_stmt)) {
+            $app_num_id = (int)$f_id;
+            if (empty($app_code)) $app_code = $f_code;
+            $patient_name = (string)$f_pname;
+            $prev_doctor = (string)$f_prev_doc;
+        }
+        mysqli_stmt_close($chk_stmt);
+    }
+}
+
 $update_sql = "UPDATE appointments SET doctor_name = ?, doctor_id = ? WHERE " . ($id > 0 ? "id = ?" : "appointment_id = ?");
 $stmt = mysqli_prepare($connection1, $update_sql);
 
@@ -89,12 +117,31 @@ if ($id > 0) {
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
+
+    // Audit log
+    recordActivity(
+        $connection1,
+        'Consultation',
+        'consultation.reassigned',
+        "Reassigned consultation {$app_code} (Patient: {$patient_name}) from Dr. {$prev_doctor} to Dr. {$doctor_name}",
+        'Consultation',
+        $app_num_id,
+        $app_code,
+        [
+            'appointment_id' => $app_code,
+            'patient_name' => $patient_name,
+            'previous_doctor' => $prev_doctor,
+            'new_doctor' => $doctor_name,
+            'doctor_id' => $doctor_id
+        ]
+    );
+
     echo json_encode([
         'status' => '1',
         'message' => 'Doctor reassigned successfully.',
         'data' => [
             'id' => $id,
-            'appointment_id' => $appointment_id,
+            'appointment_id' => $app_code,
             'doctor_name' => $doctor_name,
             'doctor_id' => $doctor_id
         ]
@@ -105,3 +152,4 @@ if (mysqli_stmt_execute($stmt)) {
     http_response_code(500);
     echo json_encode(['status' => '0', 'message' => 'Failed to reassign doctor.', 'error' => $err]);
 }
+?>

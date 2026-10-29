@@ -17,6 +17,7 @@ header('Pragma: no-cache');
 
 require_once __DIR__ . '/db_connect.php';
 require_once __DIR__ . '/azure_blob_upload.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -233,6 +234,25 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, $types, ...$insert_vals);
 
 if (mysqli_stmt_execute($stmt)) {
+    $insert_id = mysqli_insert_id($connection1);
+    recordActivity(
+        $connection1,
+        'Workshop',
+        'workshop.created',
+        "Created workshop: {$title}",
+        'Workshop',
+        $insert_id,
+        $title,
+        [
+            'workshop_id' => $new_ws_code,
+            'speaker' => $assign_speaker,
+            'date' => $date,
+            'time' => $time,
+            'fee' => $fee,
+            'attendee_type' => $attendee_type,
+            'status' => $status
+        ]
+    );
     $insert_id = mysqli_insert_id($connection1);
     mysqli_stmt_close($stmt);
 

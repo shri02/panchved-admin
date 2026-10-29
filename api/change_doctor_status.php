@@ -10,6 +10,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -69,6 +70,21 @@ if (!in_array($status, ['Active', 'Inactive'], true)) {
     exit;
 }
 
+// Fetch doctor details for logging
+$doc_name = '';
+$doc_code = $doctorid;
+$doc_q = mysqli_prepare($connection1, "SELECT name, doctorid FROM doctors WHERE id = ? LIMIT 1");
+if ($doc_q) {
+    mysqli_stmt_bind_param($doc_q, "i", $id);
+    mysqli_stmt_execute($doc_q);
+    mysqli_stmt_bind_result($doc_q, $f_name, $f_code);
+    if (mysqli_stmt_fetch($doc_q)) {
+        $doc_name = $f_name;
+        $doc_code = $f_code;
+    }
+    mysqli_stmt_close($doc_q);
+}
+
 $update_stmt = mysqli_prepare($connection1, "UPDATE doctors SET status = ? WHERE id = ?");
 if (!$update_stmt) {
     http_response_code(500);
@@ -84,6 +100,23 @@ mysqli_stmt_bind_param($update_stmt, "si", $status, $id);
 
 if (mysqli_stmt_execute($update_stmt)) {
     mysqli_stmt_close($update_stmt);
+
+    // Audit log
+    $display_name = $doc_name ?: ($doc_code ?: "Doctor #{$id}");
+    recordActivity(
+        $connection1,
+        'Doctor',
+        'doctor.status_changed',
+        "Changed status of {$display_name} to {$status}",
+        'Doctor',
+        $id,
+        $display_name,
+        [
+            'doctor_id' => $doc_code,
+            'new_status' => $status
+        ]
+    );
+
     mysqli_close($connection1);
 
     http_response_code(200);

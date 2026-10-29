@@ -292,6 +292,25 @@ if (!$stmt) {
 
 if (mysqli_stmt_execute($stmt)) {
     $insert_id = mysqli_insert_id($connection1);
+
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Package',
+        'action'      => 'package.created',
+        'entity_type' => 'packages',
+        'entity_id'   => $new_pkg_code,
+        'entity_name' => $package_name,
+        'description' => "Created package '{$package_name}' ({$new_pkg_code}) priced at ₹" . number_format($price, 2),
+        'new_values'  => [
+            'id' => $insert_id,
+            'package_id' => $new_pkg_code,
+            'package_name' => $package_name,
+            'category' => $category,
+            'duration' => $duration,
+            'price' => $price,
+            'status' => $status
+        ]
+    ]);
     mysqli_stmt_close($stmt);
 
     $combined_doctor = ($assigned_doctor_2 !== '')

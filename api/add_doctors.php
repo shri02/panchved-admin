@@ -405,6 +405,26 @@ if (mysqli_stmt_execute($stmt)) {
     $doctor_id = mysqli_insert_id($connection1);
     $doctorid = "DOC" . str_pad((string)$doctor_id, 6, "0", STR_PAD_LEFT);
 
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Doctor',
+        'action'      => 'doctor.created',
+        'entity_type' => 'doctors',
+        'entity_id'   => $doctorid,
+        'entity_name' => $full_name,
+        'description' => "Registered doctor '{$full_name}' ({$doctorid}) specializing in {$expertise}",
+        'new_values'  => [
+            'id' => $doctor_id,
+            'doctorid' => $doctorid,
+            'full_name' => $full_name,
+            'email' => $email,
+            'phone_number' => $phone_number,
+            'expertise' => $expertise,
+            'registration_number' => $registration_number,
+            'status' => $status
+        ]
+    ]);
+
     // Update doctorid code
     $update_stmt = mysqli_prepare($connection1, "UPDATE doctors SET doctorid = ? WHERE id = ?");
     if ($update_stmt) {

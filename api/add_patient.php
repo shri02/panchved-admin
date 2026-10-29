@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -106,6 +107,26 @@ if (mysqli_stmt_execute($stmt)) {
     $insert_id = mysqli_insert_id($connection1);
     mysqli_stmt_close($stmt);
 
+    // Audit log
+    recordActivity(
+        $connection1,
+        'Patient',
+        'patient.created',
+        "Registered new patient {$full_name} ({$new_patient_code})",
+        'Patient',
+        $insert_id,
+        $full_name,
+        [
+            'patient_id' => $new_patient_code,
+            'phone_number' => $phone_number,
+            'email' => $email,
+            'gender' => $gender,
+            'age' => $age,
+            'package_name' => $package_name,
+            'status' => $status
+        ]
+    );
+
     echo json_encode([
         'status' => '1',
         'message' => 'Patient registered successfully.',
@@ -132,3 +153,4 @@ if (mysqli_stmt_execute($stmt)) {
         'error' => $err
     ]);
 }
+?>

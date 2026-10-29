@@ -195,6 +195,25 @@ if (mysqli_stmt_execute($stmt)) {
     $partner_id_num = mysqli_insert_id($connection1);
     $partner_id = 'REF' . str_pad((string)$partner_id_num, 4, '0', STR_PAD_LEFT);
 
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Referral_Partner',
+        'action'      => 'referral_partner.created',
+        'entity_type' => 'referral_partners',
+        'entity_id'   => $partner_id,
+        'entity_name' => $name,
+        'description' => "Created referral partner '{$name}' with code '{$referral_code}'",
+        'new_values'  => [
+            'id' => $partner_id_num,
+            'partner_id' => $partner_id,
+            'name' => $name,
+            'phone' => $phone_number,
+            'email' => $email,
+            'referral_code' => $referral_code,
+            'status' => $status
+        ]
+    ]);
+
     // Update partner_id
     $up_pid = mysqli_prepare($connection1, "UPDATE referral_partners SET partner_id = ? WHERE id = ?");
     if ($up_pid) {

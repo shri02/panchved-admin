@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 $raw_data = file_get_contents('php://input');
 $data = [];
@@ -27,7 +28,29 @@ if ($id <= 0 && $workshop_id === '') {
     exit;
 }
 
+$ws_name = '';
+$ws_code = $workshop_id;
+$ws_num_id = $id;
+
 if ($connection1) {
+    $chk_sql = $id > 0 ? "SELECT id, title, workshop_id FROM workshops WHERE id = ? LIMIT 1" : "SELECT id, title, workshop_id FROM workshops WHERE workshop_id = ? LIMIT 1";
+    $chk_stmt = mysqli_prepare($connection1, $chk_sql);
+    if ($chk_stmt) {
+        if ($id > 0) {
+            mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+        } else {
+            mysqli_stmt_bind_param($chk_stmt, 's', $workshop_id);
+        }
+        mysqli_stmt_execute($chk_stmt);
+        mysqli_stmt_bind_result($chk_stmt, $f_id, $f_title, $f_code);
+        if (mysqli_stmt_fetch($chk_stmt)) {
+            $ws_num_id = (int)$f_id;
+            $ws_name = (string)$f_title;
+            $ws_code = (string)$f_code;
+        }
+        mysqli_stmt_close($chk_stmt);
+    }
+
     if ($id > 0) {
         $stmt = mysqli_prepare($connection1, "DELETE FROM workshops WHERE id = ?");
         if ($stmt) {
@@ -43,9 +66,24 @@ if ($connection1) {
             mysqli_stmt_close($stmt);
         }
     }
+
+    $display_title = $ws_name ?: ($ws_code ?: "Workshop #{$ws_num_id}");
+    recordActivity(
+        $connection1,
+        'Workshop',
+        'workshop.deleted',
+        "Deleted workshop: {$display_title}",
+        'Workshop',
+        $ws_num_id,
+        $display_title,
+        [
+            'workshop_id' => $ws_code
+        ]
+    );
 }
 
 echo json_encode([
     'status' => '1',
     'message' => 'Workshop deleted successfully.'
 ]);
+?>

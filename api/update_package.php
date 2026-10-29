@@ -218,6 +218,16 @@ if (!$stmt) {
 mysqli_stmt_bind_param($stmt, $types, ...$params);
 
 if (mysqli_stmt_execute($stmt)) {
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Package',
+        'action'      => 'package.updated',
+        'entity_type' => 'packages',
+        'entity_id'   => $package_id,
+        'entity_name' => $package_name ?? $package_id,
+        'description' => "Updated package '{$package_name}' ({$package_id})",
+        'metadata'    => ['package_id' => $package_id, 'package_name' => $package_name]
+    ]);
     mysqli_stmt_close($stmt);
     $combined_doctor = ($assigned_doctor_2 !== null && $assigned_doctor_2 !== '') ? ($assigned_doctor_1 . ', ' . $assigned_doctor_2) : ($assigned_doctor_1 ?? '');
     echo json_encode([

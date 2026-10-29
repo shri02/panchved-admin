@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -86,6 +87,28 @@ if (mysqli_stmt_execute($stmt)) {
     $insert_id = mysqli_insert_id($connection1);
     mysqli_stmt_close($stmt);
 
+    // Audit log
+    recordActivity(
+        $connection1,
+        'Consultation',
+        'consultation.booked',
+        "Scheduled appointment {$new_code} for {$patient_name} with Dr. {$doctor_name} on {$appointment_date} at {$appointment_time}",
+        'Consultation',
+        $insert_id,
+        $new_code,
+        [
+            'appointment_id' => $new_code,
+            'patient_id' => $patient_id,
+            'patient_name' => $patient_name,
+            'doctor_id' => $doctor_id,
+            'doctor_name' => $doctor_name,
+            'package_name' => $package_name,
+            'appointment_date' => $appointment_date,
+            'appointment_time' => $appointment_time,
+            'status' => $status
+        ]
+    );
+
     echo json_encode([
         'status' => '1',
         'message' => 'Appointment scheduled successfully.',
@@ -106,3 +129,4 @@ if (mysqli_stmt_execute($stmt)) {
     http_response_code(500);
     echo json_encode(['status' => '0', 'message' => 'Failed to schedule appointment.', 'error' => $err]);
 }
+?>

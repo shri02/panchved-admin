@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -62,6 +63,31 @@ if (empty($update_fields)) {
     exit;
 }
 
+// Fetch appointment info for audit logging
+$app_code = $appointment_id;
+$app_num_id = $id;
+$p_name = $patient_name;
+$d_name = $doctor_name;
+
+$chk_sql = $id > 0 ? "SELECT id, appointment_id, patient_name, doctor_name, appointment_date, appointment_time, status FROM appointments WHERE id = ? LIMIT 1" : "SELECT id, appointment_id, patient_name, doctor_name, appointment_date, appointment_time, status FROM appointments WHERE appointment_id = ? LIMIT 1";
+$chk_stmt = mysqli_prepare($connection1, $chk_sql);
+if ($chk_stmt) {
+    if ($id > 0) {
+        mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+    } else {
+        mysqli_stmt_bind_param($chk_stmt, 's', $appointment_id);
+    }
+    mysqli_stmt_execute($chk_stmt);
+    mysqli_stmt_bind_result($chk_stmt, $f_id, $f_code, $f_pname, $f_dname, $f_date, $f_time, $f_status);
+    if (mysqli_stmt_fetch($chk_stmt)) {
+        $app_num_id = (int)$f_id;
+        if (empty($app_code)) $app_code = $f_code;
+        if (empty($p_name)) $p_name = $f_pname;
+        if (empty($d_name)) $d_name = $f_dname;
+    }
+    mysqli_stmt_close($chk_stmt);
+}
+
 $sql = "UPDATE appointments SET " . implode(', ', $update_fields);
 if ($id > 0) {
     $sql .= " WHERE id = ?";
@@ -84,6 +110,33 @@ mysqli_stmt_bind_param($stmt, $types, ...$params);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
+
+    $action_name = ($appointment_date !== '' || $appointment_time !== '') ? 'consultation.rescheduled' : ($status !== '' ? 'consultation.status_changed' : 'consultation.updated');
+    $desc = "Updated consultation {$app_code} (Patient: {$p_name}, Doctor: {$d_name})";
+    if ($appointment_date !== '' || $appointment_time !== '') {
+        $desc = "Rescheduled consultation {$app_code} to {$appointment_date} {$appointment_time}";
+    } elseif ($status !== '') {
+        $desc = "Updated consultation {$app_code} status to {$status}";
+    }
+
+    recordActivity(
+        $connection1,
+        'Consultation',
+        $action_name,
+        $desc,
+        'Consultation',
+        $app_num_id,
+        $app_code,
+        array_filter([
+            'appointment_id' => $app_code,
+            'patient_name' => $patient_name ?: null,
+            'doctor_name' => $doctor_name ?: null,
+            'appointment_date' => $appointment_date ?: null,
+            'appointment_time' => $appointment_time ?: null,
+            'status' => $status ?: null
+        ])
+    );
+
     echo json_encode(['status' => '1', 'message' => 'Appointment updated successfully.']);
 } else {
     $err = mysqli_stmt_error($stmt);
@@ -91,3 +144,4 @@ if (mysqli_stmt_execute($stmt)) {
     http_response_code(500);
     echo json_encode(['status' => '0', 'message' => 'Failed to update appointment.', 'error' => $err]);
 }
+?>

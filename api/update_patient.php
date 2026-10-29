@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -62,6 +63,29 @@ if (empty($update_fields)) {
     exit;
 }
 
+// Fetch current details for audit logging
+$existing_name = $full_name;
+$existing_code = $patient_id;
+$p_id_numeric = $id;
+
+$chk_sql = $id > 0 ? "SELECT id, full_name, patient_id FROM patients WHERE id = ? LIMIT 1" : "SELECT id, full_name, patient_id FROM patients WHERE patient_id = ? LIMIT 1";
+$chk_stmt = mysqli_prepare($connection1, $chk_sql);
+if ($chk_stmt) {
+    if ($id > 0) {
+        mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+    } else {
+        mysqli_stmt_bind_param($chk_stmt, 's', $patient_id);
+    }
+    mysqli_stmt_execute($chk_stmt);
+    mysqli_stmt_bind_result($chk_stmt, $f_id, $f_name, $f_code);
+    if (mysqli_stmt_fetch($chk_stmt)) {
+        $p_id_numeric = (int)$f_id;
+        if (empty($existing_name)) $existing_name = $f_name;
+        if (empty($existing_code)) $existing_code = $f_code;
+    }
+    mysqli_stmt_close($chk_stmt);
+}
+
 $sql = "UPDATE patients SET " . implode(', ', $update_fields);
 if ($id > 0) {
     $sql .= " WHERE id = ?";
@@ -84,6 +108,27 @@ mysqli_stmt_bind_param($stmt, $types, ...$params);
 
 if (mysqli_stmt_execute($stmt)) {
     mysqli_stmt_close($stmt);
+
+    // Audit log
+    $display_name = $existing_name ?: ($existing_code ?: "Patient #{$p_id_numeric}");
+    recordActivity(
+        $connection1,
+        'Patient',
+        'patient.updated',
+        "Updated patient {$display_name}",
+        'Patient',
+        $p_id_numeric,
+        $display_name,
+        array_filter([
+            'patient_id' => $existing_code,
+            'full_name' => $full_name ?: null,
+            'phone_number' => $phone_number ?: null,
+            'email' => $email ?: null,
+            'package_name' => $package_name ?: null,
+            'status' => $status ?: null
+        ])
+    );
+
     echo json_encode(['status' => '1', 'message' => 'Patient updated successfully.']);
 } else {
     $err = mysqli_stmt_error($stmt);
@@ -91,3 +136,4 @@ if (mysqli_stmt_execute($stmt)) {
     http_response_code(500);
     echo json_encode(['status' => '0', 'message' => 'Failed to update patient.', 'error' => $err]);
 }
+?>

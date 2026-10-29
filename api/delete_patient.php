@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 $raw_data = file_get_contents('php://input');
 $data = [];
@@ -27,29 +28,39 @@ if ($id <= 0 && $patient_id === '') {
     exit;
 }
 
+$p_name = '';
+$p_code = $patient_id;
+$p_id = $id;
+
 if ($connection1) {
-    // 1. First retrieve the patient's phone_number and email so we can also remove their user account
+    // 1. First retrieve the patient details so we can remove their user account and log activity
     $phone_number = '';
     $email = '';
     if ($id > 0) {
-        $findStmt = mysqli_prepare($connection1, "SELECT phone_number, email FROM patients WHERE id = ? LIMIT 1");
+        $findStmt = mysqli_prepare($connection1, "SELECT id, full_name, patient_id, phone_number, email FROM patients WHERE id = ? LIMIT 1");
         if ($findStmt) {
             mysqli_stmt_bind_param($findStmt, 'i', $id);
             mysqli_stmt_execute($findStmt);
-            mysqli_stmt_bind_result($findStmt, $found_phone, $found_email);
+            mysqli_stmt_bind_result($findStmt, $found_id, $found_name, $found_code, $found_phone, $found_email);
             if (mysqli_stmt_fetch($findStmt)) {
+                $p_id = (int)$found_id;
+                $p_name = trim((string)$found_name);
+                $p_code = trim((string)$found_code);
                 $phone_number = trim((string)$found_phone);
                 $email = trim((string)$found_email);
             }
             mysqli_stmt_close($findStmt);
         }
     } else {
-        $findStmt = mysqli_prepare($connection1, "SELECT phone_number, email FROM patients WHERE patient_id = ? LIMIT 1");
+        $findStmt = mysqli_prepare($connection1, "SELECT id, full_name, patient_id, phone_number, email FROM patients WHERE patient_id = ? LIMIT 1");
         if ($findStmt) {
             mysqli_stmt_bind_param($findStmt, 's', $patient_id);
             mysqli_stmt_execute($findStmt);
-            mysqli_stmt_bind_result($findStmt, $found_phone, $found_email);
+            mysqli_stmt_bind_result($findStmt, $found_id, $found_name, $found_code, $found_phone, $found_email);
             if (mysqli_stmt_fetch($findStmt)) {
+                $p_id = (int)$found_id;
+                $p_name = trim((string)$found_name);
+                $p_code = trim((string)$found_code);
                 $phone_number = trim((string)$found_phone);
                 $email = trim((string)$found_email);
             }
@@ -101,9 +112,27 @@ if ($connection1) {
             }
         }
     }
+
+    // Audit log
+    $display_name = $p_name ?: ($p_code ?: "Patient #{$p_id}");
+    recordActivity(
+        $connection1,
+        'Patient',
+        'patient.deleted',
+        "Deleted patient {$display_name}",
+        'Patient',
+        $p_id,
+        $display_name,
+        [
+            'patient_id' => $p_code,
+            'phone_number' => $phone_number,
+            'email' => $email
+        ]
+    );
 }
 
 echo json_encode([
     'status' => '1',
     'message' => 'Patient and user account deleted successfully.'
 ]);
+?>

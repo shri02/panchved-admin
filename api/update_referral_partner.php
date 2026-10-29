@@ -156,6 +156,22 @@ if (!$up_stmt) {
 mysqli_stmt_bind_param($up_stmt, "ssssi", $name, $phone_number, $email, $status, $id);
 
 if (mysqli_stmt_execute($up_stmt)) {
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Referral_Partner',
+        'action'      => 'referral_partner.updated',
+        'entity_type' => 'referral_partners',
+        'entity_id'   => $existing_partner['partner_id'] ?: ('REF' . str_pad((string)$id, 4, '0', STR_PAD_LEFT)),
+        'entity_name' => $name,
+        'description' => "Updated referral partner '{$name}' ({$referral_code})",
+        'new_values'  => [
+            'id' => $id,
+            'name' => $name,
+            'phone' => $phone_number,
+            'email' => $email,
+            'status' => $status
+        ]
+    ]);
     mysqli_stmt_close($up_stmt);
     echo json_encode([
         'status' => '1',

@@ -140,6 +140,24 @@ if (mysqli_stmt_execute($stmt)) {
     $new_id = mysqli_insert_id($connection1);
     $campaign_id = 'SOC' . str_pad((string)$new_id, 4, '0', STR_PAD_LEFT);
 
+    require_once __DIR__ . '/activity_logger.php';
+    recordActivity($connection1, [
+        'module'      => 'Referral_Social',
+        'action'      => 'referral_social.created',
+        'entity_type' => 'social_media_referrals',
+        'entity_id'   => $campaign_id,
+        'entity_name' => $campaign_name,
+        'description' => "Created {$platform} referral campaign '{$campaign_name}' ({$referral_code})",
+        'new_values'  => [
+            'id' => $new_id,
+            'campaign_id' => $campaign_id,
+            'platform' => $platform,
+            'campaign_name' => $campaign_name,
+            'referral_code' => $referral_code,
+            'status' => $status
+        ]
+    ]);
+
     $up_cid = mysqli_prepare($connection1, "UPDATE social_media_referrals SET campaign_id = ? WHERE id = ?");
     if ($up_cid) {
         mysqli_stmt_bind_param($up_cid, "si", $campaign_id, $new_id);

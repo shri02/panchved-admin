@@ -59,6 +59,15 @@ if ($id <= 0) {
 }
 
 // Delete doctor record
+require_once __DIR__ . '/activity_logger.php';
+$docName = '';
+$docCode = '';
+$dLookup = @mysqli_query($connection1, "SELECT full_name, doctorid FROM doctors WHERE id = $id");
+if ($dLookup && $dRow = mysqli_fetch_assoc($dLookup)) {
+    $docName = $dRow['full_name'];
+    $docCode = $dRow['doctorid'] ?: ('DOC' . str_pad((string)$id, 6, '0', STR_PAD_LEFT));
+}
+
 $delete_stmt = mysqli_prepare($connection1, "DELETE FROM doctors WHERE id = ?");
 if (!$delete_stmt) {
     http_response_code(500);
@@ -78,6 +87,15 @@ if (mysqli_stmt_execute($delete_stmt)) {
     mysqli_close($connection1);
 
     if ($affected > 0) {
+        recordActivity($connection1, [
+            'module'      => 'Doctor',
+            'action'      => 'doctor.deleted',
+            'entity_type' => 'doctors',
+            'entity_id'   => $docCode ?: (string)$id,
+            'entity_name' => $docName,
+            'description' => "Deleted doctor '{$docName}' (" . ($docCode ?: $id) . ")",
+            'old_values'  => ['id' => $id, 'doctorid' => $docCode, 'name' => $docName]
+        ]);
         http_response_code(200);
         echo json_encode([
             'status' => '1',

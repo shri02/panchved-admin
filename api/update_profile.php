@@ -14,6 +14,7 @@
  */
 
 require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -269,6 +270,24 @@ $safe_user = [
     'role' => $current_session_user['role'] ?? 'Admin',
     'avatar_url' => $current_session_user['avatar_url'] ?? null
 ];
+
+$prof_action = $new_password_hash !== null ? 'profile.password_changed' : 'profile.updated';
+$prof_desc = $new_password_hash !== null ? "Updated profile and changed password for {$safe_user['full_name']}" : "Updated profile details for {$safe_user['full_name']}";
+recordActivity(
+    $connection1,
+    'Profile',
+    $prof_action,
+    $prof_desc,
+    'User',
+    $user_id,
+    $safe_user['full_name'],
+    [
+        'email' => $safe_user['email'],
+        'phone_number' => $safe_user['phone_number'],
+        'role' => $safe_user['role'],
+        'password_changed' => ($new_password_hash !== null)
+    ]
+);
 
 echo json_encode([
     'status' => '1',
