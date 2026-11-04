@@ -174,15 +174,73 @@ try {
         }
     }
 
-    $rawAppetite   = $patient['appetite'] ?? ($pData['appetite'] ?? 'irregular');
-    $rawSleep      = $patient['sleep_type'] ?? ($pData['sleep_type'] ?? 'moderate');
-    $rawSkin       = $patient['skin_type'] ?? ($pData['skin_type'] ?? 'warm_sensitive');
-    $rawHair       = $patient['hair_type'] ?? ($pData['hair_type'] ?? 'fine_soft');
-    $rawBowel      = $patient['bowel_movement'] ?? ($pData['bowel_movement'] ?? 'regular_frequent');
-    $rawStress     = $patient['stress_response'] ?? ($pData['stress_response'] ?? 'irritability_anger');
-    $rawTemp       = $patient['body_temperature'] ?? ($pData['body_temperature'] ?? 'feels_hot');
-    $rawActivity   = $patient['physical_activity'] ?? ($pData['physical_activity'] ?? 'active_intense');
-    $rawProfile    = $patient['patient_profile'] ?? ($pData['profile_type'] ?? ($patient['prakruti'] ?? 'Vata-Pitta Prakruti'));
+    $rawProfile = !empty($patient['patient_profile']) ? $patient['patient_profile'] : (!empty($pData['profile_type']) ? $pData['profile_type'] : (!empty($patient['prakruti']) ? $patient['prakruti'] : 'Agni / Pitta'));
+
+    // Intelligent dosha fallback mapping for older records
+    $defaultByProfile = [
+        'appetite'          => 'strong',
+        'sleep_type'        => 'moderate',
+        'skin_type'         => 'warm_sensitive',
+        'hair_type'         => 'fine_soft',
+        'bowel_movement'    => 'regular_frequent',
+        'stress_response'   => 'irritability_anger',
+        'body_temperature'  => 'feels_hot',
+        'physical_activity' => 'active_intense'
+    ];
+    if (stripos($rawProfile, 'Vata-Pitta') !== false) {
+        $defaultByProfile = [
+            'appetite'          => 'irregular',
+            'sleep_type'        => 'light',
+            'skin_type'         => 'warm_sensitive',
+            'hair_type'         => 'fine_soft',
+            'bowel_movement'    => 'regular_frequent',
+            'stress_response'   => 'worry_anxiety',
+            'body_temperature'  => 'feels_hot',
+            'physical_activity' => 'quick_irregular'
+        ];
+    } elseif (stripos($rawProfile, 'Pitta-Kapha') !== false || stripos($rawProfile, 'Kapha-Agni') !== false) {
+        $defaultByProfile = [
+            'appetite'          => 'strong',
+            'sleep_type'        => 'moderate',
+            'skin_type'         => 'warm_sensitive',
+            'hair_type'         => 'thick_dense',
+            'bowel_movement'    => 'regular_frequent',
+            'stress_response'   => 'irritability_anger',
+            'body_temperature'  => 'feels_hot',
+            'physical_activity' => 'active_intense'
+        ];
+    } elseif (stripos($rawProfile, 'Vata') !== false && stripos($rawProfile, 'Pitta') === false) {
+        $defaultByProfile = [
+            'appetite'          => 'irregular',
+            'sleep_type'        => 'light',
+            'skin_type'         => 'dry_rough',
+            'hair_type'         => 'dry_frizzy',
+            'bowel_movement'    => 'irregular_constipation',
+            'stress_response'   => 'worry_anxiety',
+            'body_temperature'  => 'feels_cold',
+            'physical_activity' => 'quick_irregular'
+        ];
+    } elseif (stripos($rawProfile, 'Kapha') !== false && stripos($rawProfile, 'Pitta') === false) {
+        $defaultByProfile = [
+            'appetite'          => 'mild',
+            'sleep_type'        => 'deep',
+            'skin_type'         => 'soft_smooth',
+            'hair_type'         => 'thick_dense',
+            'bowel_movement'    => 'slow_heavy',
+            'stress_response'   => 'withdrawal_sluggish',
+            'body_temperature'  => 'cool_stable',
+            'physical_activity' => 'slow_steady'
+        ];
+    }
+
+    $rawAppetite   = !empty($patient['appetite']) ? $patient['appetite'] : (!empty($pData['appetite']) ? $pData['appetite'] : $defaultByProfile['appetite']);
+    $rawSleep      = !empty($patient['sleep_type']) ? $patient['sleep_type'] : (!empty($pData['sleep_type']) ? $pData['sleep_type'] : $defaultByProfile['sleep_type']);
+    $rawSkin       = !empty($patient['skin_type']) ? $patient['skin_type'] : (!empty($pData['skin_type']) ? $pData['skin_type'] : $defaultByProfile['skin_type']);
+    $rawHair       = !empty($patient['hair_type']) ? $patient['hair_type'] : (!empty($pData['hair_type']) ? $pData['hair_type'] : $defaultByProfile['hair_type']);
+    $rawBowel      = !empty($patient['bowel_movement']) ? $patient['bowel_movement'] : (!empty($pData['bowel_movement']) ? $pData['bowel_movement'] : $defaultByProfile['bowel_movement']);
+    $rawStress     = !empty($patient['stress_response']) ? $patient['stress_response'] : (!empty($pData['stress_response']) ? $pData['stress_response'] : $defaultByProfile['stress_response']);
+    $rawTemp       = !empty($patient['body_temperature']) ? $patient['body_temperature'] : (!empty($pData['body_temperature']) ? $pData['body_temperature'] : $defaultByProfile['body_temperature']);
+    $rawActivity   = !empty($patient['physical_activity']) ? $patient['physical_activity'] : (!empty($pData['physical_activity']) ? $pData['physical_activity'] : $defaultByProfile['physical_activity']);
 
     $patient['prakruti'] = $rawProfile;
     $patient['prakruti_parikshan'] = [
@@ -218,6 +276,8 @@ try {
                 $rxRaw = trim((string)($aRow['prescription'] ?? ''));
                 $hasRx = (!empty($rxRaw) && $rxRaw !== 'null' && $rxRaw !== '{}' && $rxRaw !== '[]');
 
+                $agendaText = !empty($aRow['agenda']) ? $aRow['agenda'] : (!empty($aRow['complaint']) ? $aRow['complaint'] : 'Ayurvedic consultation');
+
                 $appointments[] = [
                     'id' => (int)$aRow['id'],
                     'appointment_id' => $aRow['appointment_id'] ?: ('APT-' . str_pad($aRow['id'], 3, '0', STR_PAD_LEFT)),
@@ -228,8 +288,8 @@ try {
                     'appointment_time' => $aRow['appointment_time'] ?: '-',
                     'duration' => $aRow['duration'] ?: '45 mins',
                     'package_name' => $aRow['package_name'] ?: ($patient['package_name'] ?: 'Ayurvedic Programme'),
-                    'agenda' => $aRow['agenda'] ?: ($aRow['complaint'] ?: 'Ayurvedic consultation'),
-                    'complaint' => $aRow['complaint'] ?: ($aRow['agenda'] ?: 'Ayurvedic consultation'),
+                    'agenda' => $agendaText,
+                    'complaint' => $agendaText,
                     'service_type' => $aRow['service_type'] ?: 'Consultation',
                     'status' => ucfirst(strtolower($aRow['status'] ?: 'Scheduled')),
                     'meet_link' => $aRow['meet_link'] ?? '',
