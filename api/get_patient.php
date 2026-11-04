@@ -122,6 +122,89 @@ try {
     $patient['last_login'] = $lastLoginTime;
     $patient['last_login_formatted'] = $lastLoginTime ? date('d M Y, h:i A', strtotime($lastLoginTime)) : 'Never';
 
+    // Resolve Prakruti Parikshan individual fields & human-readable labels
+    $prakrutiLabelsMap = [
+        'appetite' => [
+            'irregular' => 'Irregular (Sometimes hungry, sometimes not)',
+            'strong'    => 'Strong & Regular (Hungry on time)',
+            'mild'      => 'Mild / Moderate (Can skip meals easily)'
+        ],
+        'sleep_type' => [
+            'light'    => 'Light, Interrupted (Difficulty falling asleep)',
+            'moderate' => 'Moderate (Wakes due to heat or thoughts)',
+            'deep'     => 'Deep, Long (Difficulty waking up)'
+        ],
+        'skin_type' => [
+            'dry_rough'      => 'Dry, Rough, Thin',
+            'warm_sensitive' => 'Warm, Sensitive, Reddish / Prone to rashes',
+            'soft_smooth'    => 'Soft, Smooth, Thick, Moist'
+        ],
+        'hair_type' => [
+            'dry_frizzy'  => 'Dry, Rough, Frizzy',
+            'fine_soft'   => 'Fine, Soft (Early greying / thinning)',
+            'thick_dense' => 'Thick, Dense, Smooth & Oily'
+        ],
+        'bowel_movement' => [
+            'irregular_constipation' => 'Irregular, Constipation (Hard / dry stool)',
+            'regular_frequent'       => 'Regular, Frequent (Soft or loose stool, urgency)',
+            'slow_heavy'             => 'Slow, Regular, Heavy or sticky'
+        ],
+        'stress_response' => [
+            'worry_anxiety'       => 'Worry, Anxiety, Overthinking',
+            'irritability_anger'  => 'Irritability, Anger, Impatience',
+            'withdrawal_sluggish' => 'Withdrawal, Emotional Heaviness, Sluggishness'
+        ],
+        'body_temperature' => [
+            'feels_cold'  => 'Cold Sensibility (Cold hands and feet)',
+            'feels_hot'   => 'Heat Sensitivity (Dislikes heat, sweats easily)',
+            'cool_stable' => 'Cool & Stable (Tolerates weather changes)'
+        ],
+        'physical_activity' => [
+            'quick_irregular' => 'Quick, Irregular (Variety seeker, tires quickly)',
+            'active_intense'  => 'Active, Intense, Competitive',
+            'slow_steady'     => 'Slow, Steady (High stamina, calm pace)'
+        ]
+    ];
+
+    $pData = [];
+    if (!empty($patient['prakruti_data'])) {
+        $decoded = json_decode($patient['prakruti_data'], true);
+        if (is_array($decoded)) {
+            $pData = $decoded;
+        }
+    }
+
+    $rawAppetite   = $patient['appetite'] ?? ($pData['appetite'] ?? 'irregular');
+    $rawSleep      = $patient['sleep_type'] ?? ($pData['sleep_type'] ?? 'moderate');
+    $rawSkin       = $patient['skin_type'] ?? ($pData['skin_type'] ?? 'warm_sensitive');
+    $rawHair       = $patient['hair_type'] ?? ($pData['hair_type'] ?? 'fine_soft');
+    $rawBowel      = $patient['bowel_movement'] ?? ($pData['bowel_movement'] ?? 'regular_frequent');
+    $rawStress     = $patient['stress_response'] ?? ($pData['stress_response'] ?? 'irritability_anger');
+    $rawTemp       = $patient['body_temperature'] ?? ($pData['body_temperature'] ?? 'feels_hot');
+    $rawActivity   = $patient['physical_activity'] ?? ($pData['physical_activity'] ?? 'active_intense');
+    $rawProfile    = $patient['patient_profile'] ?? ($pData['profile_type'] ?? ($patient['prakruti'] ?? 'Vata-Pitta Prakruti'));
+
+    $patient['prakruti'] = $rawProfile;
+    $patient['prakruti_parikshan'] = [
+        'profile_type'            => $rawProfile,
+        'appetite'                => $rawAppetite,
+        'appetite_label'          => $prakrutiLabelsMap['appetite'][$rawAppetite] ?? ucfirst(str_replace('_', ' ', $rawAppetite)),
+        'sleep_type'              => $rawSleep,
+        'sleep_type_label'        => $prakrutiLabelsMap['sleep_type'][$rawSleep] ?? ucfirst(str_replace('_', ' ', $rawSleep)),
+        'skin_type'               => $rawSkin,
+        'skin_type_label'         => $prakrutiLabelsMap['skin_type'][$rawSkin] ?? ucfirst(str_replace('_', ' ', $rawSkin)),
+        'hair_type'               => $rawHair,
+        'hair_type_label'         => $prakrutiLabelsMap['hair_type'][$rawHair] ?? ucfirst(str_replace('_', ' ', $rawHair)),
+        'bowel_movement'          => $rawBowel,
+        'bowel_movement_label'    => $prakrutiLabelsMap['bowel_movement'][$rawBowel] ?? ucfirst(str_replace('_', ' ', $rawBowel)),
+        'stress_response'         => $rawStress,
+        'stress_response_label'   => $prakrutiLabelsMap['stress_response'][$rawStress] ?? ucfirst(str_replace('_', ' ', $rawStress)),
+        'body_temperature'        => $rawTemp,
+        'body_temperature_label'  => $prakrutiLabelsMap['body_temperature'][$rawTemp] ?? ucfirst(str_replace('_', ' ', $rawTemp)),
+        'physical_activity'       => $rawActivity,
+        'physical_activity_label' => $prakrutiLabelsMap['physical_activity'][$rawActivity] ?? ucfirst(str_replace('_', ' ', $rawActivity))
+    ];
+
     // Fetch consultations history from appointments table
     $appointments = [];
     $aStmt = @mysqli_prepare($connection1, "SELECT * FROM `appointments` WHERE `patient_id` = ? OR `patient_id` = ? OR `patient_name` = ? ORDER BY `appointment_date` DESC, `id` DESC");

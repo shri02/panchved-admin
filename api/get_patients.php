@@ -201,6 +201,7 @@ if ($stmt) {
             }
             $row['last_login'] = $lastLoginTime;
             $row['last_login_formatted'] = $lastLoginTime ? date('d M Y, h:i A', strtotime($lastLoginTime)) : 'Never';
+            $row['prakruti'] = !empty($row['patient_profile']) ? $row['patient_profile'] : (!empty($row['prakruti']) ? $row['prakruti'] : 'Vata-Pitta Prakruti');
 
             $patients[] = $row;
         }

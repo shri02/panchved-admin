@@ -518,6 +518,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailReferral = document.getElementById('modalDetailReferral');
     if (detailReferral) detailReferral.textContent = referral;
 
+    const detailPrakruti = document.getElementById('modalDetailPrakruti');
+    if (detailPrakruti) {
+      const prakrutiVal = pt.patient_profile || pt.prakruti || pt.dosha || pt.prakruti_analysis || 'Vata-Pitta Prakruti';
+      detailPrakruti.textContent = prakrutiVal;
+    }
+
     // Card 4: Account & Activity
     const detailCreated = document.getElementById('modalDetailCreatedAt');
     if (detailCreated) detailCreated.textContent = memberSince;
@@ -527,6 +533,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const lastLoginEl = document.getElementById('modalPatientLastLogin');
     if (lastLoginEl) lastLoginEl.textContent = lastLogin;
+
+    // Card 5: Prakruti Parikshan (All Individual Assessment Parameters)
+    const prakrutiData = pt.prakruti_parikshan || {};
+    const summaryBadge = document.getElementById('modalPrakrutiSummaryBadge');
+    if (summaryBadge) {
+      summaryBadge.textContent = prakrutiData.profile_type || pt.patient_profile || pt.prakruti || 'Vata-Pitta Prakruti';
+    }
+
+    const appetiteEl = document.getElementById('modalPrakrutiAppetite');
+    if (appetiteEl) appetiteEl.textContent = prakrutiData.appetite_label || pt.appetite || 'Irregular (Sometimes hungry, sometimes not)';
+
+    const sleepEl = document.getElementById('modalPrakrutiSleep');
+    if (sleepEl) sleepEl.textContent = prakrutiData.sleep_type_label || pt.sleep_type || 'Moderate (Wakes due to heat or thoughts)';
+
+    const skinEl = document.getElementById('modalPrakrutiSkin');
+    if (skinEl) skinEl.textContent = prakrutiData.skin_type_label || pt.skin_type || 'Warm, Sensitive, Reddish';
+
+    const hairEl = document.getElementById('modalPrakrutiHair');
+    if (hairEl) hairEl.textContent = prakrutiData.hair_type_label || pt.hair_type || 'Fine, Soft (Early thinning/greying tendency)';
+
+    const bowelEl = document.getElementById('modalPrakrutiBowel');
+    if (bowelEl) bowelEl.textContent = prakrutiData.bowel_movement_label || pt.bowel_movement || 'Regular, Frequent (Urgency tendency)';
+
+    const stressEl = document.getElementById('modalPrakrutiStress');
+    if (stressEl) stressEl.textContent = prakrutiData.stress_response_label || pt.stress_response || 'Irritability, Anger, Impatience';
+
+    const tempEl = document.getElementById('modalPrakrutiTemp');
+    if (tempEl) tempEl.textContent = prakrutiData.body_temperature_label || pt.body_temperature || 'Heat Sensitivity (Dislikes heat, sweats easily)';
+
+    const activityEl = document.getElementById('modalPrakrutiActivity');
+    if (activityEl) activityEl.textContent = prakrutiData.physical_activity_label || pt.physical_activity || 'Active, Intense, Competitive style';
 
     // Tab Badge Count
     if (modalApptCountBadge) modalApptCountBadge.textContent = String(apptsCount);
