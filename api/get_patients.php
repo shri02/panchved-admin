@@ -11,9 +11,33 @@
  * - limit (int, default 5)
  */
 
-require_once __DIR__ . '/db_connect.php';
-global $connection1;
-$connection1 = $GLOBALS['connection1'] ?? $connection1;
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return false;
+    }
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+try {
+    require_once __DIR__ . '/db_connect.php';
+    global $connection1;
+    $connection1 = $GLOBALS['connection1'] ?? $connection1;
+
+    if (!isset($connection1) || !$connection1) {
+        throw new mysqli_sql_exception('Database connection unavailable.');
+    }
+
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 $raw_input = file_get_contents('php://input');
 $body_data = [];
@@ -222,6 +246,7 @@ if (empty($available_statuses)) {
 
 echo json_encode([
     'status' => '1',
+    'success' => true,
     'message' => 'Patients fetched successfully.',
     'total_records' => $total_records,
     'total_pages' => $total_pages,
@@ -232,5 +257,29 @@ echo json_encode([
         'packages' => $available_packages,
         'statuses' => $available_statuses
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
+
+} catch (mysqli_sql_exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => '0',
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage(),
+        'error_type' => 'mysqli_sql_exception',
+        'error_code' => $e->getCode(),
+        'sqlstate' => $e->getSqlState(),
+        'error_details' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => '0',
+        'success' => false,
+        'message' => 'Server error: ' . $e->getMessage(),
+        'error_type' => get_class($e),
+        'error_code' => $e->getCode(),
+        'sqlstate' => 'HY000',
+        'error_details' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
+}
 

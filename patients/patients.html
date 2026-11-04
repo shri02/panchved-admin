@@ -286,9 +286,9 @@
     </main>
   </div>
 
-  <!-- View Patient Details Modal Dialog -->
-  <div class="modal-backdrop" id="viewPatientModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
-    <div class="modal-card">
+  <!-- View Patient Details Modal Dialog (Comprehensive All Details) -->
+  <div class="modal-backdrop" id="viewPatientModal" role="dialog" aria-modal="true" aria-labelledby="modalPatientName" aria-hidden="true">
+    <div class="modal-card patient-modal-card">
       
       <!-- Modal Close Button -->
       <button type="button" class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">
@@ -298,66 +298,221 @@
         </svg>
       </button>
 
-      <!-- Modal Header -->
-      <header class="modal-header">
-        <div class="modal-header-icon-wrapper">
-          <svg class="modal-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+      <!-- Modal Header Banner -->
+      <header class="patient-modal-header">
+        <div class="patient-header-profile">
+          <div class="patient-header-avatar" id="modalPatientAvatar">PT</div>
+          <div class="patient-header-info">
+            <div class="patient-header-title-row">
+              <h2 id="modalPatientName" class="patient-header-name">Patient Details</h2>
+              <span class="patient-id-badge" id="modalPatientIdBadge">P001</span>
+              <span class="status-badge" id="modalPatientStatusBadge">Ongoing</span>
+            </div>
+            <p class="patient-header-sub">
+              Enrolled in <strong id="modalPatientHeaderPackage">-</strong> &bull; Member since <span id="modalPatientHeaderMemberSince">-</span>
+            </p>
+          </div>
         </div>
-        <div class="modal-header-text">
-          <h2 id="modalTitle" class="modal-title">View</h2>
-          <p class="modal-subtitle">Your Viewing Patient Details</p>
+
+        <div class="patient-header-actions">
+          <a href="#" class="modal-contact-chip" id="modalPatientCallBtn" title="Call patient">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            <span id="modalHeaderPhoneText">Call</span>
+          </a>
+          <a href="#" class="modal-contact-chip" id="modalPatientEmailBtn" title="Email patient">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span id="modalHeaderEmailText">Email</span>
+          </a>
         </div>
       </header>
 
-      <!-- Modal Body (Patient Information Grid) -->
-      <div class="modal-body">
-        <div class="details-grid">
+      <!-- Modal Tabs Navigation -->
+      <nav class="patient-modal-tabs" aria-label="Patient details navigation tabs">
+        <button type="button" class="patient-tab-btn active" id="tabBtnProfile" aria-selected="true" aria-controls="tabContentProfile">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>Complete Profile</span>
+        </button>
+        <button type="button" class="patient-tab-btn" id="tabBtnAppointments" aria-selected="false" aria-controls="tabContentAppointments">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span>Consultations History</span>
+          <span class="tab-count-badge" id="modalApptCountBadge">0</span>
+        </button>
+      </nav>
+
+      <!-- Modal Body -->
+      <div class="modal-body patient-modal-body">
+        
+        <!-- Tab 1: Complete Profile & Demographics -->
+        <div class="patient-tab-pane active" id="tabContentProfile" role="tabpanel" aria-labelledby="tabBtnProfile">
           
-          <div class="detail-row">
-            <span class="detail-key">Name:</span>
-            <span class="detail-val" id="modalPatientName">-</span>
-          </div>
+          <div class="details-cards-grid">
+            
+            <!-- Card 1: Personal & Demographics -->
+            <div class="detail-section-card">
+              <div class="detail-section-header">
+                <div class="section-icon-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="8.5" cy="7" r="4"></circle>
+                    <polyline points="17 11 19 13 23 9"></polyline>
+                  </svg>
+                </div>
+                <h3 class="section-title">Personal Information</h3>
+              </div>
+              <div class="section-grid-content">
+                <div class="info-item">
+                  <span class="info-label">Patient ID:</span>
+                  <span class="info-value font-mono" id="modalDetailId">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Full Name:</span>
+                  <span class="info-value font-semibold" id="modalDetailName">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Date of Birth:</span>
+                  <span class="info-value" id="modalDetailDob">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Age:</span>
+                  <span class="info-value" id="modalPatientAge">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Gender:</span>
+                  <span class="info-value" id="modalPatientGender">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Blood Group:</span>
+                  <span class="info-value blood-badge" id="modalDetailBloodGroup">-</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="detail-row">
-            <span class="detail-key">Phone Number:</span>
-            <span class="detail-val" id="modalPatientPhone">-</span>
-          </div>
+            <!-- Card 2: Contact & Address -->
+            <div class="detail-section-card">
+              <div class="detail-section-header">
+                <div class="section-icon-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <h3 class="section-title">Contact & Location</h3>
+              </div>
+              <div class="section-grid-content">
+                <div class="info-item">
+                  <span class="info-label">Phone Number:</span>
+                  <span class="info-value">
+                    <a href="#" id="modalPatientPhone" class="text-link" target="_blank">-</a>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Email Address:</span>
+                  <span class="info-value">
+                    <a href="#" id="modalPatientEmail" class="text-link" target="_blank">-</a>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Emergency Contact:</span>
+                  <span class="info-value" id="modalDetailEmergency">-</span>
+                </div>
+                <div class="info-item full-width">
+                  <span class="info-label">Residential Address:</span>
+                  <span class="info-value address-val" id="modalDetailAddress">-</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="detail-row">
-            <span class="detail-key">Email:</span>
-            <span class="detail-val" id="modalPatientEmail">-</span>
-          </div>
+            <!-- Card 3: Healthcare Programme & Status -->
+            <div class="detail-section-card">
+              <div class="detail-section-header">
+                <div class="section-icon-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                  </svg>
+                </div>
+                <h3 class="section-title">Healthcare & Programme</h3>
+              </div>
+              <div class="section-grid-content">
+                <div class="info-item">
+                  <span class="info-label">Enrolled Programme:</span>
+                  <span class="info-value font-semibold text-teal" id="modalPatientPackage">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Programme Status:</span>
+                  <span class="info-value" id="modalDetailStatusWrap">
+                    <span class="status-badge status-ongoing" id="modalDetailStatus">-</span>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Total Appointments:</span>
+                  <span class="info-value font-semibold" id="modalPatientAppointments">0</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Referral Code:</span>
+                  <span class="info-value referral-badge" id="modalDetailReferral">-</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="detail-row">
-            <span class="detail-key">Age:</span>
-            <span class="detail-val" id="modalPatientAge">-</span>
-          </div>
+            <!-- Card 4: Account & Activity Timings -->
+            <div class="detail-section-card">
+              <div class="detail-section-header">
+                <div class="section-icon-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <h3 class="section-title">Account & Activity</h3>
+              </div>
+              <div class="section-grid-content">
+                <div class="info-item">
+                  <span class="info-label">Member Since:</span>
+                  <span class="info-value" id="modalDetailCreatedAt">-</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Last Updated:</span>
+                  <span class="info-value" id="modalDetailUpdatedAt">-</span>
+                </div>
+                <div class="info-item full-width">
+                  <span class="info-label">Last Login Timing:</span>
+                  <span class="info-value last-login-highlight" id="modalPatientLastLogin">-</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="detail-row">
-            <span class="detail-key">Gender:</span>
-            <span class="detail-val" id="modalPatientGender">-</span>
-          </div>
-
-          <div class="detail-row">
-            <span class="detail-key">Programme:</span>
-            <span class="detail-val" id="modalPatientPackage">-</span>
-          </div>
-
-          <div class="detail-row">
-            <span class="detail-key">Total Appointments:</span>
-            <span class="detail-val" id="modalPatientAppointments">-</span>
-          </div>
-
-          <div class="detail-row">
-            <span class="detail-key">Last Login:</span>
-            <span class="detail-val" id="modalPatientLastLogin" style="font-weight: 600; color: var(--brand-accent);">-</span>
           </div>
 
         </div>
+
+        <!-- Tab 2: Consultations & Appointments History -->
+        <div class="patient-tab-pane" id="tabContentAppointments" role="tabpanel" aria-labelledby="tabBtnAppointments" style="display: none;">
+          <div class="modal-appts-wrap" id="modalApptsContainer">
+            <div class="modal-appts-loading" style="text-align: center; padding: 36px 16px; color: #64748b;">
+              Loading consultations history...
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Modal Footer -->
+      <footer class="patient-modal-footer">
+        <button type="button" class="btn-modal-close" id="btnModalCloseFooter">Close</button>
+      </footer>
 
     </div>
   </div>

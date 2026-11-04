@@ -1,9 +1,11 @@
 /**
  * Panchved Admin - Patients Screen Interactivity & RESTful API Integration
+ * Handles: Live Search, Dynamic Programme & Status Filters, Pagination,
+ * Patient Deletion, and Comprehensive All Details Modal with Consultations History.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = window.API_BASE_URL || 'api';
+  const API_BASE = window.API_BASE_URL || '../api';
 
   // Search & Filter Elements
   const searchInput = document.getElementById('searchInput');
@@ -14,6 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modal Elements
   const viewPatientModal = document.getElementById('viewPatientModal');
   const closeModalBtn = document.getElementById('closeModalBtn');
+  const btnModalCloseFooter = document.getElementById('btnModalCloseFooter');
+  const tabBtnProfile = document.getElementById('tabBtnProfile');
+  const tabBtnAppointments = document.getElementById('tabBtnAppointments');
+  const tabContentProfile = document.getElementById('tabContentProfile');
+  const tabContentAppointments = document.getElementById('tabContentAppointments');
+  const modalApptsContainer = document.getElementById('modalApptsContainer');
+  const modalApptCountBadge = document.getElementById('modalApptCountBadge');
+
   const modalPatientName = document.getElementById('modalPatientName');
   const modalPatientPhone = document.getElementById('modalPatientPhone');
   const modalPatientEmail = document.getElementById('modalPatientEmail');
@@ -49,6 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedPackages = [];
   let selectedStatuses = [];
   let searchDebounceTimer = null;
+  const patientsCacheMap = {};
+
+  // Helper: HTML Escaping
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 
   // Helper: Initials
   function getInitials(name) {
@@ -61,6 +82,18 @@ document.addEventListener('DOMContentLoaded', () => {
       .join('')
       .substring(0, 2)
       .toUpperCase() || 'PT';
+  }
+
+  // Helper: Format Date string
+  function formatDateStr(dateStr) {
+    if (!dateStr) return '-';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
   }
 
   // 1. Fetch Patients from API
@@ -105,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const result = await response.json().catch(() => ({}));
 
-      if (!response.ok || result.status !== '1') {
+      if (!response.ok || (result.status !== '1' && result.success !== true)) {
         throw new Error(result.message || 'Failed to fetch patients.');
       }
 
@@ -125,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       patientsTableBody.innerHTML = `
         <tr>
           <td colspan="5" style="text-align: center; padding: 36px; color: #ef4444;">
-            <p style="margin-bottom: 8px; font-weight: 600;">${err.message || 'Error loading patients.'}</p>
+            <p style="margin-bottom: 8px; font-weight: 600;">${escapeHtml(err.message || 'Error loading patients.')}</p>
             <button type="button" class="filter-btn" style="display:inline-flex; padding: 6px 14px; font-size:13px;" onclick="window.retryFetchPatients()">
               Retry
             </button>
@@ -147,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const label = document.createElement('label');
           label.className = 'filter-checkbox-item';
           label.innerHTML = `
-            <span class="checkbox-label">${pkg}</span>
-            <input type="checkbox" name="packageFilter" value="${pkg}" class="custom-checkbox" ${isChecked ? 'checked' : ''}>
+            <span class="checkbox-label">${escapeHtml(pkg)}</span>
+            <input type="checkbox" name="packageFilter" value="${escapeHtml(pkg)}" class="custom-checkbox" ${isChecked ? 'checked' : ''}>
             <span class="checkbox-box" aria-hidden="true"></span>
           `;
           packageAccordionContent.appendChild(label);
@@ -166,8 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const label = document.createElement('label');
           label.className = 'filter-checkbox-item';
           label.innerHTML = `
-            <span class="checkbox-label">${st}</span>
-            <input type="checkbox" name="statusFilter" value="${st}" class="custom-checkbox" ${isChecked ? 'checked' : ''}>
+            <span class="checkbox-label">${escapeHtml(st)}</span>
+            <input type="checkbox" name="statusFilter" value="${escapeHtml(st)}" class="custom-checkbox" ${isChecked ? 'checked' : ''}>
             <span class="checkbox-box" aria-hidden="true"></span>
           `;
           statusAccordionContent.appendChild(label);
@@ -196,10 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     patients.forEach(pt => {
       const ptId = pt.id;
+      patientsCacheMap[ptId] = pt;
+
       const displayId = pt.patient_id || (ptId ? `E${String(ptId).padStart(3, '0')}` : '-');
       const fullName = pt.full_name || '-';
       const initials = getInitials(fullName);
-      const age = (pt.age !== undefined && pt.age !== null && pt.age !== '') ? pt.age : '-';
+      const age = (pt.age !== undefined && pt.age !== null && pt.age !== '') ? `${pt.age} yrs` : '-';
       const pkg = pt.package_name || '-';
       const status = pt.status || 'Ongoing';
       const isCompleted = status.toLowerCase() === 'completed';
@@ -210,33 +245,25 @@ document.addEventListener('DOMContentLoaded', () => {
       row.setAttribute('data-id', String(ptId || ''));
       row.setAttribute('data-patient-id', displayId);
       row.setAttribute('data-name', fullName);
-      row.setAttribute('data-phone', pt.phone_number || '-');
-      row.setAttribute('data-email', pt.email || '-');
-      row.setAttribute('data-age', String(age));
-      row.setAttribute('data-gender', pt.gender || '-');
-      row.setAttribute('data-package', pkg);
-      row.setAttribute('data-appointments', String(pt.total_appointments ?? 0));
-      row.setAttribute('data-last-login', pt.last_login_formatted || 'Never');
-      row.setAttribute('data-status', status);
 
       row.innerHTML = `
         <td class="td-patient">
-          <div class="patient-profile-cell">
+          <div class="patient-profile-cell" style="cursor: pointer;" title="Click to view all patient details">
             <div class="patient-avatar-circle">${initials}</div>
             <div class="patient-meta">
-              <span class="patient-name">${fullName}</span>
-              <span class="patient-id">${displayId}</span>
+              <span class="patient-name">${escapeHtml(fullName)}</span>
+              <span class="patient-id">${escapeHtml(displayId)}${pt.phone_number ? ' &bull; ' + escapeHtml(pt.phone_number) : ''}</span>
             </div>
           </div>
         </td>
-        <td class="td-age">${age}</td>
-        <td class="td-package">${pkg}</td>
+        <td class="td-age">${escapeHtml(age)}</td>
+        <td class="td-package">${escapeHtml(pkg)}</td>
         <td class="td-status">
-          <span class="status-badge ${statusBadgeClass}">${status}</span>
+          <span class="status-badge ${statusBadgeClass}">${escapeHtml(status)}</span>
         </td>
         <td class="td-action text-right">
           <div class="action-menu-container">
-            <button type="button" class="action-dots-btn" aria-label="More actions for ${fullName}" aria-haspopup="true">
+            <button type="button" class="action-dots-btn" aria-label="More actions for ${escapeHtml(fullName)}" aria-haspopup="true">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="12" cy="5" r="2"></circle>
                 <circle cx="12" cy="12" r="2"></circle>
@@ -249,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                   <circle cx="12" cy="12" r="3"></circle>
                 </svg>
-                <span>View</span>
+                <span>View All Details</span>
               </button>
               <button type="button" class="dropdown-item remove-btn" role="menuitem" style="color: #ef4444;">
                 <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -341,34 +368,303 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 5. View Modal Open
+  // 5. Modal Tab Switching Logic
+  function switchModalTab(tabKey) {
+    if (tabKey === 'appointments') {
+      if (tabBtnProfile) {
+        tabBtnProfile.classList.remove('active');
+        tabBtnProfile.setAttribute('aria-selected', 'false');
+      }
+      if (tabBtnAppointments) {
+        tabBtnAppointments.classList.add('active');
+        tabBtnAppointments.setAttribute('aria-selected', 'true');
+      }
+      if (tabContentProfile) tabContentProfile.style.display = 'none';
+      if (tabContentAppointments) tabContentAppointments.style.display = 'block';
+    } else {
+      if (tabBtnAppointments) {
+        tabBtnAppointments.classList.remove('active');
+        tabBtnAppointments.setAttribute('aria-selected', 'false');
+      }
+      if (tabBtnProfile) {
+        tabBtnProfile.classList.add('active');
+        tabBtnProfile.setAttribute('aria-selected', 'true');
+      }
+      if (tabContentAppointments) tabContentAppointments.style.display = 'none';
+      if (tabContentProfile) tabContentProfile.style.display = 'block';
+    }
+  }
+
+  if (tabBtnProfile) {
+    tabBtnProfile.addEventListener('click', () => switchModalTab('profile'));
+  }
+  if (tabBtnAppointments) {
+    tabBtnAppointments.addEventListener('click', () => switchModalTab('appointments'));
+  }
+
+  // 6. Populate Modal Fields with Complete Data
+  function populateModalFields(pt) {
+    if (!pt) return;
+    const fullName = pt.full_name || '-';
+    const displayId = pt.patient_id || (pt.id ? `E${String(pt.id).padStart(3, '0')}` : '-');
+    const initials = getInitials(fullName);
+    const status = pt.status || 'Ongoing';
+    const isCompleted = status.toLowerCase() === 'completed';
+    const pkg = pt.package_name || '-';
+    const phone = pt.phone_number || '-';
+    const email = pt.email || '-';
+    const age = (pt.age !== undefined && pt.age !== null && pt.age !== '') ? `${pt.age} yrs` : '-';
+    const gender = pt.gender || '-';
+    const dob = pt.dob_formatted || pt.dob || '-';
+    const bloodGroup = pt.blood_group || '-';
+    const emergency = pt.emergency_contact || '-';
+    const address = pt.address || 'No residential address recorded.';
+    const apptsCount = pt.total_appointments !== undefined ? pt.total_appointments : (Array.isArray(pt.appointments) ? pt.appointments.length : 0);
+    const referral = pt.referral_code || pt.referred_by || 'Direct Registration';
+    const memberSince = pt.created_at_formatted || (pt.created_at ? formatDateStr(pt.created_at) : '-');
+    const lastUpdated = pt.updated_at_formatted || (pt.updated_at ? formatDateStr(pt.updated_at) : memberSince);
+    const lastLogin = pt.last_login_formatted || pt.last_login || 'Never';
+
+    // Header Elements
+    const avatarEl = document.getElementById('modalPatientAvatar');
+    if (avatarEl) avatarEl.textContent = initials;
+
+    if (modalPatientName) modalPatientName.textContent = fullName;
+
+    const idBadge = document.getElementById('modalPatientIdBadge');
+    if (idBadge) idBadge.textContent = displayId;
+
+    const statusBadge = document.getElementById('modalPatientStatusBadge');
+    if (statusBadge) {
+      statusBadge.textContent = status;
+      statusBadge.className = `status-badge ${isCompleted ? 'status-completed' : 'status-ongoing'}`;
+    }
+
+    const headerPkg = document.getElementById('modalPatientHeaderPackage');
+    if (headerPkg) headerPkg.textContent = pkg;
+
+    const headerMemberSince = document.getElementById('modalPatientHeaderMemberSince');
+    if (headerMemberSince) headerMemberSince.textContent = memberSince;
+
+    // Contact Chips in Header
+    const callBtn = document.getElementById('modalPatientCallBtn');
+    const callText = document.getElementById('modalHeaderPhoneText');
+    if (callBtn) {
+      if (phone && phone !== '-') {
+        callBtn.href = `tel:${phone.replace(/\s+/g, '')}`;
+        callBtn.style.display = 'inline-flex';
+        if (callText) callText.textContent = phone;
+      } else {
+        callBtn.href = '#';
+        callBtn.style.display = 'none';
+      }
+    }
+
+    const emailBtn = document.getElementById('modalPatientEmailBtn');
+    const emailText = document.getElementById('modalHeaderEmailText');
+    if (emailBtn) {
+      if (email && email !== '-') {
+        emailBtn.href = `mailto:${email}`;
+        emailBtn.style.display = 'inline-flex';
+        if (emailText) emailText.textContent = email;
+      } else {
+        emailBtn.href = '#';
+        emailBtn.style.display = 'none';
+      }
+    }
+
+    // Card 1: Personal Information
+    const detailId = document.getElementById('modalDetailId');
+    if (detailId) detailId.textContent = displayId;
+
+    const detailName = document.getElementById('modalDetailName');
+    if (detailName) detailName.textContent = fullName;
+
+    const detailDob = document.getElementById('modalDetailDob');
+    if (detailDob) detailDob.textContent = dob;
+
+    if (modalPatientAge) modalPatientAge.textContent = age;
+    if (modalPatientGender) modalPatientGender.textContent = gender;
+
+    const detailBlood = document.getElementById('modalDetailBloodGroup');
+    if (detailBlood) detailBlood.textContent = bloodGroup;
+
+    // Card 2: Contact & Location
+    if (modalPatientPhone) {
+      modalPatientPhone.textContent = phone;
+      modalPatientPhone.href = phone && phone !== '-' ? `tel:${phone.replace(/\s+/g, '')}` : '#';
+    }
+    if (modalPatientEmail) {
+      modalPatientEmail.textContent = email;
+      modalPatientEmail.href = email && email !== '-' ? `mailto:${email}` : '#';
+    }
+    const detailEmergency = document.getElementById('modalDetailEmergency');
+    if (detailEmergency) detailEmergency.textContent = emergency;
+
+    const detailAddress = document.getElementById('modalDetailAddress');
+    if (detailAddress) detailAddress.textContent = address;
+
+    // Card 3: Healthcare Programme & Status
+    if (modalPatientPackage) modalPatientPackage.textContent = pkg;
+
+    const detailStatus = document.getElementById('modalDetailStatus');
+    if (detailStatus) {
+      detailStatus.textContent = status;
+      detailStatus.className = `status-badge ${isCompleted ? 'status-completed' : 'status-ongoing'}`;
+    }
+
+    if (modalPatientAppointments) modalPatientAppointments.textContent = String(apptsCount);
+
+    const detailReferral = document.getElementById('modalDetailReferral');
+    if (detailReferral) detailReferral.textContent = referral;
+
+    // Card 4: Account & Activity
+    const detailCreated = document.getElementById('modalDetailCreatedAt');
+    if (detailCreated) detailCreated.textContent = memberSince;
+
+    const detailUpdated = document.getElementById('modalDetailUpdatedAt');
+    if (detailUpdated) detailUpdated.textContent = lastUpdated;
+
+    const lastLoginEl = document.getElementById('modalPatientLastLogin');
+    if (lastLoginEl) lastLoginEl.textContent = lastLogin;
+
+    // Tab Badge Count
+    if (modalApptCountBadge) modalApptCountBadge.textContent = String(apptsCount);
+  }
+
+  // 7. Render Consultations History Cards
+  function renderModalAppointments(appointments, emptyMsg) {
+    if (!modalApptsContainer) return;
+
+    if (!Array.isArray(appointments) || appointments.length === 0) {
+      modalApptsContainer.innerHTML = `
+        <div style="text-align: center; padding: 48px 16px; color: #64748b;">
+          <svg style="width: 48px; height: 48px; margin: 0 auto 12px; color: #cbd5e1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <p style="font-size: 14px; font-weight: 500; margin: 0;">${escapeHtml(emptyMsg || 'No consultations recorded for this patient yet.')}</p>
+        </div>
+      `;
+      return;
+    }
+
+    modalApptsContainer.innerHTML = appointments.map(appt => {
+      const apptId = appt.appointment_id || ('APT-' + appt.id);
+      const doctor = appt.doctor_name || 'Doctor';
+      const date = appt.date_formatted || appt.appointment_date || '-';
+      const time = appt.appointment_time || '-';
+      const duration = appt.duration || '45 mins';
+      const agenda = appt.agenda || appt.complaint || 'Ayurvedic consultation';
+      const status = appt.status || 'Scheduled';
+      const isCompleted = status.toLowerCase() === 'completed';
+      const statusClass = isCompleted ? 'status-completed' : 'status-ongoing';
+      const hasRx = Boolean(appt.has_prescription);
+      const meetLink = appt.meet_link ? String(appt.meet_link).trim() : '';
+
+      return `
+        <div class="modal-appt-item">
+          <div class="appt-left-col">
+            <div class="appt-id-row">
+              <span class="appt-id-badge">${escapeHtml(apptId)}</span>
+              <span class="appt-doctor-name">${escapeHtml(doctor)}</span>
+              <span class="status-badge ${statusClass}">${escapeHtml(status)}</span>
+            </div>
+            <div class="appt-meta-row">
+              <span>📅 ${escapeHtml(date)} &bull; ${escapeHtml(time)} (${escapeHtml(duration)})</span>
+              <span>🌿 ${escapeHtml(appt.package_name || 'Consultation')}</span>
+            </div>
+            <div class="appt-agenda-text">
+              <strong>Complaint/Agenda:</strong> ${escapeHtml(agenda)}
+            </div>
+          </div>
+          <div class="appt-right-col">
+            ${hasRx ? `
+              <span class="appt-rx-badge appt-rx-available" title="Medical Prescription recorded">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Rx Added
+              </span>
+            ` : `
+              <span class="appt-rx-badge appt-rx-none" title="No prescription recorded yet">
+                No Rx
+              </span>
+            `}
+            ${meetLink ? `
+              <a href="${escapeHtml(meetLink)}" target="_blank" rel="noopener noreferrer" class="appt-meet-link" title="Join Google Meet Consultation">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5-5v14l-5-5"></path><rect x="2" y="6" width="13" height="12" rx="2"></rect></svg>
+                Meet
+              </a>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 8. Open Comprehensive Patient Details Modal
+  async function openPatientDetailsModal(ptId) {
+    if (!ptId) return;
+
+    // Reset tabs to profile
+    switchModalTab('profile');
+
+    // Pre-populate with cached row data if available
+    const cachedPt = patientsCacheMap[ptId];
+    if (cachedPt) {
+      populateModalFields(cachedPt);
+    }
+
+    if (modalApptsContainer) {
+      modalApptsContainer.innerHTML = `
+        <div style="text-align: center; padding: 40px 16px; color: #64748b;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <svg style="animation: spin 1s linear infinite; width: 22px; height: 22px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+            </svg>
+            <span>Loading consultations history...</span>
+          </div>
+        </div>
+      `;
+    }
+
+    openModal();
+
+    // Fetch fresh complete details from get_patient.php
+    try {
+      const response = await fetch(`${API_BASE}/get_patient.php?id=${encodeURIComponent(ptId)}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      const res = await response.json().catch(() => ({}));
+
+      if (response.ok && (res.status === '1' || res.success === true) && res.data) {
+        const fullPatient = res.data;
+        patientsCacheMap[ptId] = fullPatient;
+        populateModalFields(fullPatient);
+        renderModalAppointments(fullPatient.appointments || []);
+      } else {
+        renderModalAppointments([], res.message || 'No past consultations found.');
+      }
+    } catch (err) {
+      console.warn('Notice: Error loading full patient details:', err);
+      renderModalAppointments([], 'Could not load consultations history.');
+    }
+  }
+
+  // View Details Click Listeners (Delegated on View Button & Patient Profile Cell)
   document.addEventListener('click', (e) => {
     const viewBtn = e.target.closest('.view-btn');
-    if (viewBtn) {
+    const profileCell = e.target.closest('.patient-profile-cell');
+
+    if (viewBtn || profileCell) {
       e.preventDefault();
-      const row = viewBtn.closest('.patient-row');
+      const row = (viewBtn || profileCell).closest('.patient-row');
       if (row) {
-        const name = row.getAttribute('data-name') || '-';
-        const phone = row.getAttribute('data-phone') || '-';
-        const email = row.getAttribute('data-email') || '-';
-        const age = row.getAttribute('data-age') || '-';
-        const gender = row.getAttribute('data-gender') || '-';
-        const pkg = row.getAttribute('data-package') || '-';
-        const appointments = row.getAttribute('data-appointments') || '0';
-
-        if (modalPatientName) modalPatientName.textContent = name;
-        if (modalPatientPhone) modalPatientPhone.textContent = phone;
-        if (modalPatientEmail) modalPatientEmail.textContent = email;
-        if (modalPatientAge) modalPatientAge.textContent = age;
-        if (modalPatientGender) modalPatientGender.textContent = gender;
-        if (modalPatientPackage) modalPatientPackage.textContent = pkg;
-        if (modalPatientAppointments) modalPatientAppointments.textContent = appointments;
-        const modalPatientLastLogin = document.getElementById('modalPatientLastLogin');
-        if (modalPatientLastLogin) modalPatientLastLogin.textContent = row.getAttribute('data-last-login') || 'Never';
-
-        openModal();
+        const ptId = row.getAttribute('data-id');
+        openPatientDetailsModal(ptId);
       }
-
       closeAllActionDropdowns();
     }
   });
@@ -390,13 +686,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+  if (btnModalCloseFooter) btnModalCloseFooter.addEventListener('click', closeModal);
+
   if (viewPatientModal) {
     viewPatientModal.addEventListener('click', (e) => {
       if (e.target === viewPatientModal) closeModal();
     });
   }
 
-  // 6. Delete / Remove Patient
+  // 9. Delete / Remove Patient
   document.addEventListener('click', async (e) => {
     const removeBtn = e.target.closest('.remove-btn');
     if (removeBtn) {
@@ -416,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ id: Number(id), patient_id: patientId })
           });
           const res = await response.json();
-          if (res.status === '1') {
+          if (res.status === '1' || res.success === true) {
             if (window.showAppToast) window.showAppToast(`Patient "${patientName}" removed successfully.`);
             fetchPatients(currentPage);
           } else {
@@ -424,7 +722,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (err) {
           console.error(err);
-          // Fallback UI remove
           row.remove();
           if (window.showAppToast) window.showAppToast(`Patient "${patientName}" removed.`);
         }
@@ -432,7 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 7. Live Search with Debounce
+  // 10. Live Search with Debounce
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       currentSearchQuery = e.target.value;
@@ -456,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 8. Filter Slide-Over Drawer
+  // 11. Filter Slide-Over Drawer
   function openFilterDrawer() {
     if (filterDrawer && filterDrawerBackdrop) {
       filterDrawer.classList.add('open');
@@ -496,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Checkbox Filter Change Listeners (Delegated)
+  // Checkbox Filter Change Listeners
   if (packageAccordionContent) {
     packageAccordionContent.addEventListener('change', (e) => {
       if (e.target && e.target.name === 'packageFilter') {
