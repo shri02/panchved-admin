@@ -96,12 +96,15 @@ if (!$connection1 || !($connection1 instanceof mysqli)) {
 }
 
 if (!$connection1 || !($connection1 instanceof mysqli)) {
-    http_response_code(500);
     echo json_encode([
         'status' => '0',
-        'message' => 'Database connection failed.',
-        'error' => !empty($lastDbError) ? $lastDbError : 'Unable to connect to database server.'
-    ]);
+        'success' => false,
+        'message' => 'Database connection failed: ' . (!empty($lastDbError) ? $lastDbError : 'Unable to connect to database server.'),
+        'error_type' => 'mysqli_connection_error',
+        'error_code' => mysqli_connect_errno() ?: 2002,
+        'sqlstate' => 'HY000',
+        'error_details' => !empty($lastDbError) ? $lastDbError : 'Unable to connect to database server.'
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

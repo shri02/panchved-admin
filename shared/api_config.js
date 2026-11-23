@@ -13,9 +13,7 @@
   window.API_BASE_URL = window.API_BASE_URL || (
     window.location.protocol === 'file:'
       ? 'https://admin.ocayur.com/api'
-      : (isDigitalBolt || isLocal)
-        ? defaultApiRel
-        : 'https://admin.ocayur.com/api'
+      : defaultApiRel
   );
 
   // Global Auth Helper for Ocayur

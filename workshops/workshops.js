@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const API_BASE = window.API_BASE_URL || 'api';
+  const API_BASE = window.API_BASE_URL || '../api';
 
   // Views
   const workshopsListView = document.getElementById('workshopsListView');
