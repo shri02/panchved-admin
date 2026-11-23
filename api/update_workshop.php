@@ -4,253 +4,378 @@
  * POST: /api/update_workshop.php
  */
 
-require_once __DIR__ . '/db_connect.php';
-require_once __DIR__ . '/azure_blob_upload.php';
-require_once __DIR__ . '/activity_logger.php';
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['status' => '0', 'message' => 'Only POST method is allowed.']);
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-$raw_data = file_get_contents('php://input');
-$data = [];
-if ($raw_data !== false && trim($raw_data) !== '') {
-    $jsonData = json_decode($raw_data, true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
-        $data = $jsonData;
+// Convert PHP warnings and notices to ErrorException so they don't corrupt JSON output
+set_error_handler(function($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) {
+        return false;
     }
-}
-if (empty($data) && !empty($_POST)) {
-    $data = $_POST;
-}
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
 
-$raw_id = trim((string) ($data['id'] ?? ''));
-$workshop_id = trim((string) ($data['workshop_id'] ?? ''));
-if ($workshop_id === '' && !is_numeric($raw_id) && $raw_id !== '') {
-    $workshop_id = $raw_id;
-}
-$id = is_numeric($raw_id) ? intval($raw_id) : 0;
-
-if ($id <= 0 && $workshop_id === '') {
-    http_response_code(400);
-    echo json_encode(['status' => '0', 'message' => 'Workshop id or workshop_id is required.']);
-    exit;
-}
-
-$title = trim((string) ($data['title'] ?? $data['name'] ?? $data['workshopName'] ?? ''));
-$subtitle = isset($data['subtitle']) ? trim((string)$data['subtitle']) : (isset($data['workshop_subtitle']) ? trim((string)$data['workshop_subtitle']) : (isset($data['workshopSubtitle']) ? trim((string)$data['workshopSubtitle']) : null));
-$assign_speaker = isset($data['assign_speaker']) ? trim((string)$data['assign_speaker']) : (isset($data['assigned_speaker']) ? trim((string)$data['assigned_speaker']) : (isset($data['assignSpeaker']) ? trim((string)$data['assignSpeaker']) : null));
-$meet_link = isset($data['meet_link']) ? trim((string)$data['meet_link']) : (isset($data['meetLink']) ? trim((string)$data['meetLink']) : null);
-
-$instructor = trim((string) ($data['instructor'] ?? ''));
-$speaker = trim((string) ($data['speaker'] ?? $instructor));
-if ($assign_speaker !== null && $assign_speaker !== '') {
-    if ($speaker === '') $speaker = $assign_speaker;
-    if ($instructor === '') $instructor = $assign_speaker;
-}
-
-$attendee_type = trim((string) ($data['attendee_type'] ?? $data['attendee'] ?? ''));
-if (strcasecmp($attendee_type, 'patient') === 0) {
-    $attendee_type = 'Patient';
-} elseif (strcasecmp($attendee_type, 'doctor') === 0) {
-    $attendee_type = 'Doctor';
-} elseif (strcasecmp($attendee_type, 'both') === 0 || strcasecmp($attendee_type, 'all') === 0) {
-    $attendee_type = 'Both';
-}
-$date = trim((string) ($data['date'] ?? ''));
-$time = trim((string) ($data['time'] ?? ''));
-$fee_raw = isset($data['fee']) ? preg_replace('/[^\d.]/', '', (string) $data['fee']) : (isset($data['price']) ? preg_replace('/[^\d.]/', '', (string) $data['price']) : null);
-$about = trim((string) ($data['about'] ?? ''));
-$status = trim((string) ($data['status'] ?? ''));
-
-// Handle Workshop Image Upload to Azure Blob Storage if provided
-$image_url = null;
-$wsImageFile = $_FILES['workshop-images']
-    ?? $_FILES['workshop_image']
-    ?? $_FILES['workshop_images']
-    ?? $_FILES['workshop-image']
-    ?? $_FILES['image']
-    ?? null;
-
-if ($wsImageFile && ($wsImageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-    try {
-        $image_url = uploadWorkshopImageToAzure($wsImageFile);
-    } catch (Throwable $e) {
-        error_log('update_workshop.php image upload error: ' . $e->getMessage());
-        http_response_code(400);
-        echo json_encode(['status' => '0', 'message' => $e->getMessage()]);
+try {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        http_response_code(405);
+        echo json_encode([
+            'status' => '0',
+            'success' => false,
+            'message' => 'Only POST method is allowed.'
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
-} elseif (isset($data['image_url']) && trim((string)$data['image_url']) !== '') {
-    $image_url = trim((string)$data['image_url']);
-}
 
-// Check / Ensure columns exist in workshops table
-$existing_columns = [];
-if ($connection1) {
-    $columns_res = @mysqli_query($connection1, "SHOW COLUMNS FROM workshops");
-    if ($columns_res) {
-        while ($col = mysqli_fetch_assoc($columns_res)) {
-            $existing_columns[] = strtolower($col['Field']);
+    require_once __DIR__ . '/db_connect.php';
+    @require_once __DIR__ . '/azure_blob_upload.php';
+    @require_once __DIR__ . '/activity_logger.php';
+
+    global $connection1;
+    $connection1 = $GLOBALS['connection1'] ?? $connection1;
+
+    if (!isset($connection1) || !$connection1) {
+        throw new mysqli_sql_exception('Database connection unavailable: ' . ($lastDbError ?? 'unable to connect to database.'));
+    }
+
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+    $raw_data = file_get_contents('php://input');
+    $data = [];
+    if ($raw_data !== false && trim($raw_data) !== '') {
+        $jsonData = json_decode($raw_data, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($jsonData)) {
+            $data = $jsonData;
         }
     }
+    if (empty($data) && !empty($_POST)) {
+        $data = $_POST;
+    }
+
+    $raw_id = trim((string) ($data['id'] ?? ''));
+    $workshop_id = trim((string) ($data['workshop_id'] ?? ''));
+    if ($workshop_id === '' && !is_numeric($raw_id) && $raw_id !== '') {
+        $workshop_id = $raw_id;
+    }
+    $id = is_numeric($raw_id) ? intval($raw_id) : 0;
+
+    if ($id <= 0 && $workshop_id === '') {
+        http_response_code(400);
+        echo json_encode([
+            'status' => '0',
+            'success' => false,
+            'message' => 'Workshop id or workshop_id is required.'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $title = trim((string) ($data['title'] ?? $data['name'] ?? $data['workshopName'] ?? ''));
+    $subtitle = isset($data['subtitle']) ? trim((string)$data['subtitle']) : (isset($data['workshop_subtitle']) ? trim((string)$data['workshop_subtitle']) : (isset($data['workshopSubtitle']) ? trim((string)$data['workshopSubtitle']) : null));
+    $assign_speaker = isset($data['assign_speaker']) ? trim((string)$data['assign_speaker']) : (isset($data['assigned_speaker']) ? trim((string)$data['assigned_speaker']) : (isset($data['assignSpeaker']) ? trim((string)$data['assignSpeaker']) : null));
+    $meet_link = isset($data['meet_link']) ? trim((string)$data['meet_link']) : (isset($data['meetLink']) ? trim((string)$data['meetLink']) : null);
+
+    $instructor = trim((string) ($data['instructor'] ?? ''));
+    $speaker = trim((string) ($data['speaker'] ?? $instructor));
+    if ($assign_speaker !== null && $assign_speaker !== '') {
+        if ($speaker === '') $speaker = $assign_speaker;
+        if ($instructor === '') $instructor = $assign_speaker;
+    }
+
+    $attendee_type = trim((string) ($data['attendee_type'] ?? $data['attendee'] ?? ''));
+    if (strcasecmp($attendee_type, 'patient') === 0) {
+        $attendee_type = 'Patient';
+    } elseif (strcasecmp($attendee_type, 'doctor') === 0) {
+        $attendee_type = 'Doctor';
+    } elseif (strcasecmp($attendee_type, 'both') === 0 || strcasecmp($attendee_type, 'all') === 0) {
+        $attendee_type = 'Both';
+    }
+    $date = trim((string) ($data['date'] ?? ''));
+    $time = trim((string) ($data['time'] ?? ''));
+    $fee_raw = isset($data['fee']) ? preg_replace('/[^\d.]/', '', (string) $data['fee']) : (isset($data['price']) ? preg_replace('/[^\d.]/', '', (string) $data['price']) : null);
+    $about = trim((string) ($data['about'] ?? ''));
+    $status = trim((string) ($data['status'] ?? ''));
+
+    // Handle Workshop Image Upload to Azure Blob Storage if provided
+    $image_url = null;
+    $wsImageFile = $_FILES['workshop-images']
+        ?? $_FILES['workshop_image']
+        ?? $_FILES['workshop_images']
+        ?? $_FILES['workshop-image']
+        ?? $_FILES['image']
+        ?? null;
+
+    if ($wsImageFile && ($wsImageFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+        if (function_exists('uploadWorkshopImageToAzure')) {
+            $image_url = uploadWorkshopImageToAzure($wsImageFile);
+        }
+    } elseif (isset($data['image_url']) && trim((string)$data['image_url']) !== '') {
+        $image_url = trim((string)$data['image_url']);
+    }
+
+    // Inspect existing columns in workshops table
+    $existing_columns = [];
+    try {
+        $columns_res = mysqli_query($connection1, "SHOW COLUMNS FROM workshops");
+        if ($columns_res) {
+            while ($col = mysqli_fetch_assoc($columns_res)) {
+                $existing_columns[] = strtolower($col['Field']);
+            }
+            mysqli_free_result($columns_res);
+        }
+    } catch (Throwable $ignored) {
+        // Continue even if SHOW COLUMNS fails
+    }
+
+    // Check if optional columns exist / can be added
     if (!empty($existing_columns)) {
-        if (!in_array('subtitle', $existing_columns)) {
-            @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `subtitle` VARCHAR(255) NULL AFTER `title`");
-            $existing_columns[] = 'subtitle';
-        }
-        if (!in_array('assign_speaker', $existing_columns)) {
-            @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `assign_speaker` VARCHAR(150) NULL AFTER `speaker`");
-            $existing_columns[] = 'assign_speaker';
-        }
-        if (!in_array('meet_link', $existing_columns)) {
-            @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `meet_link` VARCHAR(255) NULL AFTER `assign_speaker`");
-            $existing_columns[] = 'meet_link';
-        }
-        if (!in_array('image_url', $existing_columns)) {
-            @mysqli_query($connection1, "ALTER TABLE workshops ADD COLUMN `image_url` VARCHAR(255) NULL AFTER `about`");
-            $existing_columns[] = 'image_url';
-        }
-    }
-}
-
-$update_fields = [];
-$params = [];
-$types = '';
-
-if ($title !== '') { $update_fields[] = "title = ?"; $params[] = $title; $types .= 's'; }
-if ($subtitle !== null) { $update_fields[] = "subtitle = ?"; $params[] = $subtitle; $types .= 's'; }
-if ($instructor !== '') { $update_fields[] = "instructor = ?"; $params[] = $instructor; $types .= 's'; }
-if ($speaker !== '') { $update_fields[] = "speaker = ?"; $params[] = $speaker; $types .= 's'; }
-if ($assign_speaker !== null) { $update_fields[] = "assign_speaker = ?"; $params[] = $assign_speaker; $types .= 's'; }
-if ($meet_link !== null) { $update_fields[] = "meet_link = ?"; $params[] = $meet_link; $types .= 's'; }
-if ($attendee_type !== '') { $update_fields[] = "attendee_type = ?"; $params[] = $attendee_type; $types .= 's'; }
-if ($date !== '') {
-    $formatted_date = null;
-    if ($date !== '0000-00-00') {
-        $ts = strtotime($date);
-        if ($ts !== false && $ts > 0 && (int)date('Y', $ts) > 1970) {
-            $formatted_date = date('Y-m-d', $ts);
-        } else {
-            $dcheck = DateTime::createFromFormat('Y-m-d', $date);
-            if ($dcheck && (int)$dcheck->format('Y') > 1970) {
-                $formatted_date = $dcheck->format('Y-m-d');
-            } else {
-                $dcheck2 = DateTime::createFromFormat('d/m/Y', $date);
-                if ($dcheck2 && (int)$dcheck2->format('Y') > 1970) {
-                    $formatted_date = $dcheck2->format('Y-m-d');
-                } else {
-                    $dcheck3 = DateTime::createFromFormat('d-m-Y', $date);
-                    if ($dcheck3 && (int)$dcheck3->format('Y') > 1970) {
-                        $formatted_date = $dcheck3->format('Y-m-d');
+        $optional_cols = [
+            'subtitle' => "ALTER TABLE workshops ADD COLUMN `subtitle` VARCHAR(255) NULL AFTER `title`",
+            'assign_speaker' => "ALTER TABLE workshops ADD COLUMN `assign_speaker` VARCHAR(150) NULL AFTER `speaker`",
+            'meet_link' => "ALTER TABLE workshops ADD COLUMN `meet_link` VARCHAR(255) NULL AFTER `assign_speaker`",
+            'image_url' => "ALTER TABLE workshops ADD COLUMN `image_url` VARCHAR(255) NULL AFTER `about`"
+        ];
+        foreach ($optional_cols as $col_name => $alter_sql) {
+            if (!in_array($col_name, $existing_columns, true)) {
+                try {
+                    if (mysqli_query($connection1, $alter_sql)) {
+                        $existing_columns[] = $col_name;
                     }
+                } catch (Throwable $alter_err) {
+                    // Suppress ALTER failure (e.g., lack of DDL privileges)
                 }
             }
         }
     }
-    if ($formatted_date !== null) {
-        $update_fields[] = "date = ?"; $params[] = $formatted_date; $types .= 's';
+
+    $colExists = function($field) use ($existing_columns) {
+        return empty($existing_columns) || in_array(strtolower($field), $existing_columns, true);
+    };
+
+    $update_fields = [];
+    $params = [];
+    $types = '';
+
+    if ($title !== '' && $colExists('title')) {
+        $update_fields[] = "`title` = ?";
+        $params[] = $title;
+        $types .= 's';
     }
-}
-if ($time !== '') { $update_fields[] = "time = ?"; $params[] = $time; $types .= 's'; }
-if ($fee_raw !== null && $fee_raw !== '') {
-    $val = floatval($fee_raw);
-    $update_fields[] = "fee = ?"; $params[] = $val; $types .= 'd';
-    $update_fields[] = "price = ?"; $params[] = $val; $types .= 'd';
-}
-if ($about !== '') { $update_fields[] = "about = ?"; $params[] = $about; $types .= 's'; }
-if ($status !== '' && in_array($status, ['Upcoming', 'Completed', 'Cancelled', 'Active', 'Past'], true)) {
-    $update_fields[] = "status = ?"; $params[] = $status; $types .= 's';
-}
-if ($image_url !== null && $image_url !== '') {
-    $update_fields[] = "image_url = ?"; $params[] = $image_url; $types .= 's';
-}
+    if ($subtitle !== null && $colExists('subtitle')) {
+        $update_fields[] = "`subtitle` = ?";
+        $params[] = $subtitle;
+        $types .= 's';
+    }
+    if ($instructor !== '' && $colExists('instructor')) {
+        $update_fields[] = "`instructor` = ?";
+        $params[] = $instructor;
+        $types .= 's';
+    }
+    if ($speaker !== '' && $colExists('speaker')) {
+        $update_fields[] = "`speaker` = ?";
+        $params[] = $speaker;
+        $types .= 's';
+    }
+    if ($assign_speaker !== null && $colExists('assign_speaker')) {
+        $update_fields[] = "`assign_speaker` = ?";
+        $params[] = $assign_speaker;
+        $types .= 's';
+    }
+    if ($meet_link !== null && $colExists('meet_link')) {
+        $update_fields[] = "`meet_link` = ?";
+        $params[] = $meet_link;
+        $types .= 's';
+    }
+    if ($attendee_type !== '' && $colExists('attendee_type')) {
+        $update_fields[] = "`attendee_type` = ?";
+        $params[] = $attendee_type;
+        $types .= 's';
+    }
+    if ($date !== '') {
+        $formatted_date = null;
+        if ($date !== '0000-00-00') {
+            $ts = strtotime($date);
+            if ($ts !== false && $ts > 0 && (int)date('Y', $ts) > 1970) {
+                $formatted_date = date('Y-m-d', $ts);
+            } else {
+                $dcheck = DateTime::createFromFormat('Y-m-d', $date);
+                if ($dcheck && (int)$dcheck->format('Y') > 1970) {
+                    $formatted_date = $dcheck->format('Y-m-d');
+                } else {
+                    $dcheck2 = DateTime::createFromFormat('d/m/Y', $date);
+                    if ($dcheck2 && (int)$dcheck2->format('Y') > 1970) {
+                        $formatted_date = $dcheck2->format('Y-m-d');
+                    } else {
+                        $dcheck3 = DateTime::createFromFormat('d-m-Y', $date);
+                        if ($dcheck3 && (int)$dcheck3->format('Y') > 1970) {
+                            $formatted_date = $dcheck3->format('Y-m-d');
+                        }
+                    }
+                }
+            }
+        }
+        if ($formatted_date !== null && $colExists('date')) {
+            $update_fields[] = "`date` = ?";
+            $params[] = $formatted_date;
+            $types .= 's';
+        }
+    }
+    if ($time !== '' && $colExists('time')) {
+        $update_fields[] = "`time` = ?";
+        $params[] = $time;
+        $types .= 's';
+    }
+    if ($fee_raw !== null && $fee_raw !== '') {
+        $val = floatval($fee_raw);
+        $added_fee = false;
+        if ($colExists('fee')) {
+            $update_fields[] = "`fee` = ?";
+            $params[] = $val;
+            $types .= 'd';
+            $added_fee = true;
+        }
+        if ($colExists('price')) {
+            $update_fields[] = "`price` = ?";
+            $params[] = $val;
+            $types .= 'd';
+            $added_fee = true;
+        }
+        if (!$added_fee && empty($existing_columns)) {
+            $update_fields[] = "`price` = ?";
+            $params[] = $val;
+            $types .= 'd';
+        }
+    }
+    if ($about !== '' && $colExists('about')) {
+        $update_fields[] = "`about` = ?";
+        $params[] = $about;
+        $types .= 's';
+    }
+    if ($status !== '' && in_array($status, ['Upcoming', 'Completed', 'Cancelled', 'Active', 'Past'], true) && $colExists('status')) {
+        $update_fields[] = "`status` = ?";
+        $params[] = $status;
+        $types .= 's';
+    }
+    if ($image_url !== null && $image_url !== '' && $colExists('image_url')) {
+        $update_fields[] = "`image_url` = ?";
+        $params[] = $image_url;
+        $types .= 's';
+    }
 
-if (empty($update_fields)) {
-    echo json_encode(['status' => '1', 'message' => 'No fields to update.']);
-    exit;
-}
+    if (empty($update_fields)) {
+        echo json_encode([
+            'status' => '1',
+            'success' => true,
+            'message' => 'No fields to update.'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-if (!$connection1) {
-    echo json_encode(['status' => '1', 'message' => 'Workshop updated successfully.']);
-    exit;
-}
+    $ws_name = $title;
+    $ws_code = $workshop_id;
+    $ws_numeric_id = $id;
 
-$ws_name = $title;
-$ws_code = $workshop_id;
-$ws_numeric_id = $id;
+    $chk_sql = $id > 0 ? "SELECT `id`, `title`, `workshop_id` FROM `workshops` WHERE `id` = ? LIMIT 1" : "SELECT `id`, `title`, `workshop_id` FROM `workshops` WHERE `workshop_id` = ? LIMIT 1";
+    $chk_stmt = mysqli_prepare($connection1, $chk_sql);
+    if ($chk_stmt) {
+        if ($id > 0) {
+            mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+        } else {
+            mysqli_stmt_bind_param($chk_stmt, 's', $workshop_id);
+        }
+        mysqli_stmt_execute($chk_stmt);
+        mysqli_stmt_bind_result($chk_stmt, $f_id, $f_title, $f_code);
+        if (mysqli_stmt_fetch($chk_stmt)) {
+            $ws_numeric_id = (int)$f_id;
+            if (empty($ws_name)) $ws_name = $f_title;
+            if (empty($ws_code)) $ws_code = $f_code;
+        }
+        mysqli_stmt_close($chk_stmt);
+    }
 
-$chk_sql = $id > 0 ? "SELECT id, title, workshop_id FROM workshops WHERE id = ? LIMIT 1" : "SELECT id, title, workshop_id FROM workshops WHERE workshop_id = ? LIMIT 1";
-$chk_stmt = mysqli_prepare($connection1, $chk_sql);
-if ($chk_stmt) {
+    $sql = "UPDATE `workshops` SET " . implode(', ', $update_fields);
     if ($id > 0) {
-        mysqli_stmt_bind_param($chk_stmt, 'i', $id);
+        $sql .= " WHERE `id` = ?";
+        $params[] = $id;
+        $types .= 'i';
     } else {
-        mysqli_stmt_bind_param($chk_stmt, 's', $workshop_id);
+        $sql .= " WHERE `workshop_id` = ?";
+        $params[] = $workshop_id;
+        $types .= 's';
     }
-    mysqli_stmt_execute($chk_stmt);
-    mysqli_stmt_bind_result($chk_stmt, $f_id, $f_title, $f_code);
-    if (mysqli_stmt_fetch($chk_stmt)) {
-        $ws_numeric_id = (int)$f_id;
-        if (empty($ws_name)) $ws_name = $f_title;
-        if (empty($ws_code)) $ws_code = $f_code;
+
+    $stmt = mysqli_prepare($connection1, $sql);
+    if (!$stmt) {
+        throw new mysqli_sql_exception(mysqli_error($connection1) ?: 'Failed to prepare workshop update statement.');
     }
-    mysqli_stmt_close($chk_stmt);
-}
 
-$sql = "UPDATE workshops SET " . implode(', ', $update_fields);
-if ($id > 0) {
-    $sql .= " WHERE id = ?";
-    $params[] = $id;
-    $types .= 'i';
-} else {
-    $sql .= " WHERE workshop_id = ?";
-    $params[] = $workshop_id;
-    $types .= 's';
-}
+    mysqli_stmt_bind_param($stmt, $types, ...$params);
 
-$stmt = mysqli_prepare($connection1, $sql);
-if (!$stmt) {
-    echo json_encode(['status' => '1', 'message' => 'Workshop updated successfully.']);
-    exit;
-}
-
-mysqli_stmt_bind_param($stmt, $types, ...$params);
-
-if (mysqli_stmt_execute($stmt)) {
-    recordActivity(
-        $connection1,
-        'Workshop',
-        'workshop.updated',
-        "Updated workshop: {$ws_name}",
-        'Workshop',
-        $ws_numeric_id,
-        $ws_name,
-        array_filter([
-            'workshop_id' => $ws_code,
-            'title' => $title ?: null,
-            'status' => $status ?: null,
-            'speaker' => $assign_speaker ?: null,
-            'date' => $formatted_date ?? ($date ?: null),
-            'time' => $time ?: null,
-            'fee' => $fee_raw !== null && $fee_raw !== '' ? floatval($fee_raw) : null
-        ])
-    );
+    $executed = mysqli_stmt_execute($stmt);
+    if (!$executed) {
+        $errMsg = mysqli_stmt_error($stmt) ?: 'Failed to execute workshop update statement.';
+        mysqli_stmt_close($stmt);
+        throw new mysqli_sql_exception($errMsg);
+    }
     mysqli_stmt_close($stmt);
+
+    if (function_exists('recordActivity')) {
+        recordActivity(
+            $connection1,
+            'Workshop',
+            'workshop.updated',
+            "Updated workshop: {$ws_name}",
+            'Workshop',
+            $ws_numeric_id,
+            $ws_name,
+            array_filter([
+                'workshop_id' => $ws_code,
+                'title' => $title ?: null,
+                'status' => $status ?: null,
+                'speaker' => $assign_speaker ?: null,
+                'date' => $formatted_date ?? ($date ?: null),
+                'time' => $time ?: null,
+                'fee' => $fee_raw !== null && $fee_raw !== '' ? floatval($fee_raw) : null
+            ])
+        );
+    }
+
     echo json_encode([
         'status' => '1',
+        'success' => true,
         'message' => 'Workshop updated successfully.',
         'data' => [
-            'id' => $id,
-            'workshop_id' => $workshop_id,
+            'id' => $ws_numeric_id,
+            'workshop_id' => $ws_code,
             'image_url' => $image_url
         ]
-    ]);
-} else {
-    $err = mysqli_stmt_error($stmt);
-    mysqli_stmt_close($stmt);
+    ], JSON_UNESCAPED_UNICODE);
+
+} catch (mysqli_sql_exception $e) {
     http_response_code(500);
-    echo json_encode(['status' => '0', 'message' => 'Failed to update workshop.', 'error' => $err]);
+    echo json_encode([
+        'status' => '0',
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage(),
+        'error_type' => 'mysqli_sql_exception',
+        'error_code' => $e->getCode(),
+        'sqlstate' => method_exists($e, 'getSqlState') ? $e->getSqlState() : 'HY000',
+        'error_details' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode([
+        'status' => '0',
+        'success' => false,
+        'message' => 'Server error: ' . $e->getMessage(),
+        'error_type' => get_class($e),
+        'error_code' => $e->getCode(),
+        'sqlstate' => 'HY000',
+        'error_details' => $e->getMessage()
+    ], JSON_UNESCAPED_UNICODE);
 }

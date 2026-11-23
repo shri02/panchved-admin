@@ -1217,13 +1217,12 @@ document.addEventListener('DOMContentLoaded', () => {
           switchView(workshopsListView);
           fetchWorkshops(currentPage);
         } else {
-          showToast(res.message || 'Failed to update workshop.', 'error');
+          const errMsg = res.error_details || res.message || 'Failed to update workshop.';
+          showToast(errMsg, 'error');
         }
       } catch (err) {
         console.error(err);
-        showToast('Workshop updated successfully!');
-        switchView(workshopsListView);
-        fetchWorkshops(currentPage);
+        showToast(err.message || 'Error updating workshop.', 'error');
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
