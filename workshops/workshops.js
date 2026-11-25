@@ -928,10 +928,19 @@ document.addEventListener('DOMContentLoaded', () => {
           body: formData
         });
 
-        const res = await response.json().catch(() => ({}));
+        const rawText = await response.text();
+        let res = {};
+        try {
+          res = rawText ? JSON.parse(rawText) : {};
+        } catch (_) {
+          res = {};
+        }
 
         if (!response.ok || res.status !== '1') {
-          throw new Error(res.message || 'Failed to create workshop.');
+          const exactReason = res.error_details && res.message && !res.message.includes(res.error_details)
+            ? `${res.message} (${res.error_details})`
+            : (res.message || res.error_details || (rawText && !rawText.trim().startsWith('<') ? rawText.trim() : `Server returned HTTP ${response.status}`));
+          throw new Error(exactReason);
         }
 
         showToast('Workshop created successfully!');
