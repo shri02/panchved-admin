@@ -36,7 +36,7 @@ try {
 
     if (!isset($connection1) || !($connection1 instanceof mysqli)) {
         error_log('add_workshop.php: database connection $connection1 is unavailable.');
-        http_response_code(500);
+        http_response_code(200);
         echo json_encode([
             'status' => '0',
             'success' => false,
@@ -45,7 +45,7 @@ try {
             'error_code' => 500,
             'sqlstate' => null,
             'error_details' => 'Database connection $connection1 is unavailable.'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -236,7 +236,7 @@ try {
     if (!$stmt) {
         $prepErr = mysqli_error($connection1);
         error_log('add_workshop.php prepare failed: ' . $prepErr);
-        http_response_code(500);
+        http_response_code(200);
         echo json_encode([
             'status' => '0',
             'success' => false,
@@ -245,7 +245,7 @@ try {
             'error_code' => mysqli_errno($connection1),
             'sqlstate' => mysqli_sqlstate($connection1),
             'error_details' => $prepErr
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -254,24 +254,23 @@ try {
     if (mysqli_stmt_execute($stmt)) {
         $insert_id = mysqli_insert_id($connection1);
         try {
-            recordActivity(
-                $connection1,
-                'Workshop',
-                'workshop.created',
-                "Created workshop: {$title}",
-                'Workshop',
-                $insert_id,
-                $title,
-                [
-                    'workshop_id' => $new_ws_code,
-                    'speaker' => $assign_speaker,
-                    'date' => $date,
-                    'time' => $time,
-                    'fee' => $fee,
+            recordActivity($connection1, [
+                'module'      => 'Workshop',
+                'action'      => 'workshop.created',
+                'entity_type' => 'Workshop',
+                'entity_id'   => $insert_id,
+                'entity_name' => $title,
+                'description' => "Created workshop: {$title}",
+                'metadata'    => [
+                    'workshop_id'   => $new_ws_code,
+                    'speaker'       => $assign_speaker,
+                    'date'          => $date,
+                    'time'          => $time,
+                    'fee'           => $fee,
                     'attendee_type' => $attendee_type,
-                    'status' => $status
+                    'status'        => $status
                 ]
-            );
+            ]);
         } catch (Throwable $logEx) {
             error_log('add_workshop.php activity log notice: ' . $logEx->getMessage());
         }
@@ -300,14 +299,14 @@ try {
                 'image_url' => $image_url,
                 'status' => $status
             ]
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
     } else {
         $err = mysqli_stmt_error($stmt);
         $errno = mysqli_stmt_errno($stmt);
         $sqlstate = mysqli_stmt_sqlstate($stmt);
         mysqli_stmt_close($stmt);
         error_log('add_workshop.php insert failed: ' . $err);
-        http_response_code(500);
+        http_response_code(200);
         echo json_encode([
             'status' => '0',
             'success' => false,
@@ -316,11 +315,11 @@ try {
             'error_code' => $errno,
             'sqlstate' => $sqlstate,
             'error_details' => $err
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
     }
 } catch (mysqli_sql_exception $e) {
     error_log('add_workshop.php mysqli_sql_exception: ' . $e->getMessage());
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode([
         'status' => '0',
         'success' => false,
@@ -329,10 +328,10 @@ try {
         'error_code' => $e->getCode(),
         'sqlstate' => method_exists($e, 'getSqlState') ? $e->getSqlState() : null,
         'error_details' => $e->getMessage()
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('add_workshop.php Throwable: ' . $e->getMessage());
-    http_response_code(500);
+    http_response_code(200);
     echo json_encode([
         'status' => '0',
         'success' => false,
@@ -341,5 +340,5 @@ try {
         'error_code' => $e->getCode(),
         'sqlstate' => null,
         'error_details' => $e->getMessage()
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }
