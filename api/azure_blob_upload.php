@@ -305,7 +305,7 @@ function uploadBlobImageToAzure(array $file, string $folder = 'packages', string
     $responseBody = curl_exec($ch);
     $curlError = curl_error($ch);
     $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    unset($ch);
     fclose($stream);
 
     if ($responseBody === false || $httpCode !== 201) {

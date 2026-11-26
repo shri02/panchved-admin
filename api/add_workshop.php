@@ -16,14 +16,14 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 
 set_error_handler(function ($severity, $message, $file, $line) {
-    if (!(error_reporting() & $severity)) {
+    if (!(error_reporting() & $severity) || ($severity & (E_DEPRECATED | E_USER_DEPRECATED))) {
         return false;
     }
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
 
 try {
-    require_once __DIR__ . '/db_connect.php';
+    require_once __DIR__ . '/database.php';
     require_once __DIR__ . '/azure_blob_upload.php';
     require_once __DIR__ . '/activity_logger.php';
 
