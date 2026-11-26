@@ -4,7 +4,7 @@
  * GET: /api/get_appointment.php?id=1 or ?appointment_id=ABC-001
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 $id = intval($_GET['id'] ?? 0);
 $appointment_id = trim((string) ($_GET['appointment_id'] ?? ''));

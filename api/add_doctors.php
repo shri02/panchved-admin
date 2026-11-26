@@ -5,7 +5,7 @@
  * POST: /api/add_doctors.php
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 /* =========================================
    CHECK REQUEST METHOD

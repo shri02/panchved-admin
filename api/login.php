@@ -8,7 +8,7 @@
  * - password (string)
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 // Helper: detect client IP address
 function getClientIpAddress() {

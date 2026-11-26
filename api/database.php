@@ -2,13 +2,39 @@
 
 /*
 |--------------------------------------------------------------------------
-| DATABASE CONFIGURATION
+| DATABASE CONFIGURATION & SHARED API HEADERS
 |--------------------------------------------------------------------------
-|
-| Store your database credentials in variables.
-| This makes the code easier to read and update later.
-|
 */
+
+if (!headers_sent()) {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    if (isset($_SERVER['HTTP_ORIGIN'])) {
+        header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Max-Age: 86400');
+    } else {
+        header('Access-Control-Allow-Origin: *');
+    }
+
+    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+}
+
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    if (!headers_sent()) {
+        if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
+            header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        }
+        if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+            header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+        }
+        http_response_code(200);
+    }
+    exit(0);
+}
 
 // Database server IP address or hostname
 $dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? ($_SERVER['DB_HOST'] ?? "162.214.80.27"));
@@ -20,98 +46,59 @@ $dbName = getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? ($_SERVER['DB_NAME'] ?? "jew
 $dbUser = getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? ($_SERVER['DB_USER'] ?? "jewrzsmy_panchveduser"));
 
 // Database password
-$dbPass = (getenv('DB_PASS') !== false && getenv('DB_PASS') !== '') 
-    ? getenv('DB_PASS') 
+$dbPass = (getenv('DB_PASS') !== false && getenv('DB_PASS') !== '')
+    ? getenv('DB_PASS')
     : ($_ENV['DB_PASS'] ?? ($_SERVER['DB_PASS'] ?? '$hr1dhar@321'));
 
+$connection1 = null;
+$lastDbError = '';
+$lastDbErrno = 0;
 
-/*
-|--------------------------------------------------------------------------
-| CREATE DATABASE CONNECTION
-|--------------------------------------------------------------------------
-|
-| Connect PHP to MySQL with support for Azure SSL and standard connections.
-|
-*/
+try {
+    mysqli_report(MYSQLI_REPORT_OFF);
+    $connection1 = mysqli_init();
+    if ($connection1) {
+        // Enable SSL if connecting to Azure or DB_SSL flag is set
+        if (getenv('DB_SSL') === 'true' || strpos($dbHost, 'azure.com') !== false) {
+            mysqli_ssl_set($connection1, NULL, NULL, NULL, NULL, NULL);
+            $connected = @mysqli_real_connect($connection1, $dbHost, $dbUser, $dbPass, $dbName, 3306, NULL, MYSQLI_CLIENT_SSL);
+        } else {
+            $connected = @mysqli_real_connect($connection1, $dbHost, $dbUser, $dbPass, $dbName);
+        }
 
-$connection1 = mysqli_init();
-if ($connection1) {
-    // Enable SSL if connecting to Azure or DB_SSL flag is set
-    if (getenv('DB_SSL') === 'true' || strpos($dbHost, 'azure.com') !== false) {
-        mysqli_ssl_set($connection1, NULL, NULL, NULL, NULL, NULL);
-        $connected = @mysqli_real_connect($connection1, $dbHost, $dbUser, $dbPass, $dbName, 3306, NULL, MYSQLI_CLIENT_SSL);
+        if (!$connected) {
+            $lastDbError = mysqli_connect_error() ?: mysqli_error($connection1);
+            $lastDbErrno = mysqli_connect_errno() ?: mysqli_errno($connection1);
+            $connection1 = null;
+        }
     } else {
-        $connected = @mysqli_real_connect($connection1, $dbHost, $dbUser, $dbPass, $dbName);
+        $lastDbError = 'mysqli_init() failed.';
     }
-
-    if (!$connected) {
-        // Fallback to standard mysqli_connect
-        $connection1 = @mysqli_connect($dbHost, $dbUser, $dbPass, $dbName);
-    }
-} else {
-    $connection1 = @mysqli_connect($dbHost, $dbUser, $dbPass, $dbName);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| CHECK IF CONNECTION IS SUCCESSFUL
-|--------------------------------------------------------------------------
-|
-| If connection fails, display the error and stop execution.
-|
-*/
-
-if ($connection1 && !mysqli_connect_errno()) {
-    mysqli_set_charset($connection1, "utf8mb4");
-    date_default_timezone_set('Asia/Kolkata');
-    @mysqli_query($connection1, "SET time_zone = '+05:30'");
-} else {
+} catch (Throwable $e) {
+    $lastDbError = $e->getMessage();
+    $lastDbErrno = (int)$e->getCode();
     $connection1 = null;
 }
 
+if (!$connection1 || mysqli_connect_errno()) {
+    $errMsg = $lastDbError ?: (mysqli_connect_error() ?: 'Unable to connect to database.');
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=UTF-8');
+    }
+    echo json_encode([
+        'status'        => '0',
+        'success'       => false,
+        'message'       => 'Database connection failed: ' . $errMsg,
+        'error_type'    => 'mysqli_connection_error',
+        'error_code'    => $lastDbErrno ?: (mysqli_connect_errno() ?: 2002),
+        'sqlstate'      => 'HY000',
+        'error_details' => $errMsg
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-/*
-|--------------------------------------------------------------------------
-| CONNECTION SUCCESS MESSAGE (OPTIONAL)
-|--------------------------------------------------------------------------
-|
-| Uncomment this line only for testing.
-| Remove or comment it in production.
-|
-*/
-
-// echo "Database Connected Successfully";
-
-
-/*
-|--------------------------------------------------------------------------
-| HOW TO USE THIS FILE
-|--------------------------------------------------------------------------
-|
-| In any API file, simply write:
-|
-| include 'database.php';
-|
-| Then use:
-|
-| $connection1
-|
-| for all database queries.
-|
-*/
-
-
-/*
-|--------------------------------------------------------------------------
-| EXAMPLE QUERY
-|--------------------------------------------------------------------------
-|
-| $result = mysqli_query(
-|     $connection1,
-|     "SELECT * FROM employees"
-| );
-|
-*/
-
+mysqli_set_charset($connection1, "utf8mb4");
+date_default_timezone_set('Asia/Kolkata');
+@mysqli_query($connection1, "SET time_zone = '+05:30'");
+$GLOBALS['connection1'] = $connection1;
 ?>

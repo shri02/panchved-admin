@@ -4,7 +4,7 @@
  * POST/DELETE: /api/delete_patient.php
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/activity_logger.php';
 
 $raw_data = file_get_contents('php://input');

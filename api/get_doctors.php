@@ -12,7 +12,7 @@
  * - limit (int, default 5)
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 // Accept both GET and POST requests
 $raw_input = file_get_contents('php://input');

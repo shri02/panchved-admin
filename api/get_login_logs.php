@@ -23,7 +23,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit;
 }
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 date_default_timezone_set('Asia/Kolkata');
 if (isset($connection1) && $connection1) {

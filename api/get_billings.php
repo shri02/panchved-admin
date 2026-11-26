@@ -11,7 +11,7 @@
  * READ-ONLY API: No database modifications are performed.
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 // Safe JSON input reading
 $raw_input = file_get_contents('php://input');

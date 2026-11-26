@@ -5,7 +5,7 @@
  * POST: /api/update_doctor.php
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([

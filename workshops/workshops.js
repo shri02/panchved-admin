@@ -616,6 +616,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </svg>
                 <span>View</span>
               </button>
+              <button type="button" class="dropdown-item delete-ws-btn" role="menuitem" style="color: #dc2626;">
+                <svg class="item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Delete</span>
+              </button>
             </div>
           </div>
         </td>
@@ -968,8 +975,61 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 8. Edit Workshop View Open & Submit
+  // 8. Edit & Delete Workshop Actions
   document.addEventListener('click', async (e) => {
+    const deleteBtn = e.target.closest('.delete-ws-btn');
+    if (deleteBtn) {
+      e.preventDefault();
+      closeAllDropdowns();
+
+      const row = deleteBtn.closest('.workshop-row');
+      if (!row) return;
+
+      const wsDbId = row.getAttribute('data-id') || '';
+      const wsCode = row.getAttribute('data-ws-id') || '';
+      const wsName = row.querySelector('.ws-name-cell')?.textContent?.trim() || 'this workshop';
+
+      if (!confirm(`Are you sure you want to delete "${wsName}"? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/delete_workshop.php`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            id: wsDbId ? parseInt(wsDbId, 10) : 0,
+            workshop_id: wsCode
+          })
+        });
+
+        const rawText = await response.text();
+        let res = {};
+        try {
+          res = rawText ? JSON.parse(rawText) : {};
+        } catch (_) {
+          res = {};
+        }
+
+        if (!response.ok || res.status !== '1') {
+          const exactReason = res.error_details && res.message && !res.message.includes(res.error_details)
+            ? `${res.message} (${res.error_details})`
+            : (res.message || res.error_details || `Server returned HTTP ${response.status}`);
+          throw new Error(exactReason);
+        }
+
+        showToast('Workshop deleted successfully!');
+        await fetchWorkshops(currentPage);
+      } catch (err) {
+        console.error('Delete workshop error:', err);
+        showToast(err.message || 'Failed to delete workshop.', 'error');
+      }
+      return;
+    }
+
     const editBtn = e.target.closest('.edit-ws-btn');
     if (editBtn) {
       e.preventDefault();

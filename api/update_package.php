@@ -4,7 +4,7 @@
  * POST: /api/update_package.php
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/azure_blob_upload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

@@ -9,7 +9,7 @@
  */
 
 header('Content-Type: application/json; charset=UTF-8');
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 $current_system_year = (int) date('Y');
 $year = intval($_GET['year'] ?? $current_system_year);

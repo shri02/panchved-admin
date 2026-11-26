@@ -8,7 +8,7 @@
  * - doctor_name (string) or doctor_id (int)
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

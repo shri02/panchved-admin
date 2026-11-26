@@ -4,7 +4,7 @@
  * GET: /api/get_workshop.php?id=1 or ?workshop_id=WS-001
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 $raw_id = trim((string) ($_GET['id'] ?? ''));
 $workshop_id = trim((string) ($_GET['workshop_id'] ?? ''));

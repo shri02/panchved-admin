@@ -24,7 +24,7 @@ set_error_handler(function($severity, $message, $file, $line) {
 });
 
 try {
-    require_once __DIR__ . '/db_connect.php';
+    require_once __DIR__ . '/database.php';
 
     global $connection1;
     $connection1 = $GLOBALS['connection1'] ?? $connection1;

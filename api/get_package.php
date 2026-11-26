@@ -4,7 +4,7 @@
  * GET/POST: /api/get_package.php?id=1 or ?package_id=PKG-001
  */
 
-require_once __DIR__ . '/db_connect.php';
+require_once __DIR__ . '/database.php';
 
 $raw_input = file_get_contents('php://input');
 $body_data = [];

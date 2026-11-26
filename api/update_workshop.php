@@ -38,7 +38,7 @@ try {
         exit;
     }
 
-    require_once __DIR__ . '/db_connect.php';
+    require_once __DIR__ . '/database.php';
     @require_once __DIR__ . '/azure_blob_upload.php';
     @require_once __DIR__ . '/activity_logger.php';
 
